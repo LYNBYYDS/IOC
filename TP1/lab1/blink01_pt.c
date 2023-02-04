@@ -184,7 +184,7 @@ int main ( int argc, char **argv )
 
     one_third_period = period / 3;
 
-    uint32_t volatile * gpio_base = 0;
+    // uint32_t volatile * gpio_base = 0;
     
 
     // map GPIO registers

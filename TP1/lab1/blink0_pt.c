@@ -156,7 +156,7 @@ int main ( int argc, char **argv )
     }
     half_period = period / 2;
 
-    uint32_t volatile * gpio_base = 0;
+    // uint32_t volatile * g    io_base = 0;
     
 
     // map GPIO registers
@@ -178,7 +178,7 @@ int main ( int argc, char **argv )
     
 
    
-	pthread_t t1,t2;
+	pthread_t t1;
 
 	printf("Avant la création du thread.\n");
 	// Création du thread

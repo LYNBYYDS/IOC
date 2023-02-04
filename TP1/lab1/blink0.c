@@ -136,7 +136,8 @@ main ( int argc, char **argv )
         period = atoi ( argv[1] );
     }
     half_period = period / 2;
-    uint32_t volatile * gpio_base = 0;
+    
+    //uint32_t volatile * gpio_base = 0;
 
     // map GPIO registers
     // ---------------------------------------------
