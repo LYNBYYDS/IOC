@@ -28,8 +28,8 @@
 
 // variable global pour le partage de l'information du bouton poussoir
 
-int BP_ON = 0;   // mis a 1 si le bouton a ete appuye, mis a 0 quand la tache qui attend l'appui a vu l'appui
-int BP_OFF = 0;  // mis a 1 si le bouton a ete relache, mis a 0 quand la tache qui attend le relachement a vu le relachement
+int BP_ON;   // mis a 1 si le bouton a ete appuye, mis a 0 quand la tache qui attend l'appui a vu l'appui
+int BP_OFF;  // mis a 1 si le bouton a ete relache, mis a 0 quand la tache qui attend le relachement a vu le relachement
 
 
 struct gpio_s
@@ -139,32 +139,35 @@ delay ( unsigned int milisec )
 
 void *bouton(void* period) {
     
-    uint32_t val = 0;
     unsigned int T = *(unsigned int*)period;
-    int cpt = 0;
 
-    int clignote = 0;
+    int val_prec = 1;   // memoir des etats precedent et nouveau
+    int val_nouv = 1;
 
-    printf ( "-- info: start blinking.\n" );
+    printf ( "-- info: start reading.\n" );
 	while(1){
-
-        if(clignote == 1){
-            val = gpio_read ( GPIO_BP );
-                delay(T);
-                val = 1 - val;
-                cpt++;
+        delay(T);       //attente du delay, ici 20ms
+        val_nouv = gpio_read ( GPIO_BP );
+        if (val_prec != val_nouv){
+            if(val_nouv == 0){
+                BP_ON = 1;
+            }else{
+                BP_OFF = 1;
+            }
+            val_prec = val_nouv;
         }
-	}
-	// Arrêt propre du thread
+
+    }
+
+	// Arret propre du thread
 	pthread_exit(EXIT_SUCCESS);
 }
 
 // On creer une fonction pour fair clignoter la LED 1
-void *cligner1(void* period) {
+void *led0_telerupteur(void* period) {
     
     uint32_t val = 0;
     unsigned int T = *(unsigned int*)period;
-    int cpt = 0;
 
     int clignote = 0;
 
@@ -173,16 +176,18 @@ void *cligner1(void* period) {
         if (BP_ON == 1){
             clignote = 1;
             BP_ON = 0;
+            //gpio_write ( GPIO_LED0, 1 );
         }
         if(BP_OFF == 1){
             clignote = 0;
             BP_OFF = 0;
+            //gpio_write ( GPIO_LED0, 0 );
         }
         if(clignote == 1){
+            printf("de");
             gpio_write ( GPIO_LED0, val );
                 delay(T);
                 val = 1 - val;
-                cpt++;
         }
 	}
 	// Arrêt propre du thread
@@ -214,7 +219,7 @@ int main ( int argc, char **argv )
 {
     // Get args
     // ---------------------------------------------
-    int period, half_period, one_third_period;
+    int period, half_period, one_third_period, bouton_periode;
 
     period = 1000; /* default = 1Hz */
     if ( argc > 1 ) {
@@ -222,7 +227,7 @@ int main ( int argc, char **argv )
     }
     half_period = period / 2;
     one_third_period = period / 3;
-    bouton_periode = 50*period;
+    bouton_periode = period/50;
 
     uint32_t volatile * gpio_base = 0;
     
@@ -246,19 +251,18 @@ int main ( int argc, char **argv )
     // ---------------------------------------------
 
     
-
-   
-	pthread_t t1,t2;
+	pthread_t t1,t2,t3;
 
 	printf("Avant la creation du thread.\n");
 	// Creation du thread
-	pthread_create(&t1, NULL, cligner1, (void *) &half_period);
+	pthread_create(&t1, NULL, led0_telerupteur, (void *) &half_period);
 	pthread_create(&t2, NULL, cligner2, (void *) &one_third_period);
+    pthread_create(&t3, NULL, bouton, (void *) &bouton_periode);
 	
 
-
     pthread_join(t1,NULL);  
-    pthread_join(t2,NULL);       
+    pthread_join(t2,NULL);
+    pthread_join(t3,NULL);         
     printf("Après la creation du thread.\n"); 
     return 0;
 }
