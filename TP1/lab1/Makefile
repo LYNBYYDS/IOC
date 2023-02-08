@@ -14,6 +14,10 @@ help:
 	@echo ""
 	@echo " 		all					clean all and recompile"
 	@echo ""
+	@echo "			source					include source"
+	@echo ""
+	@echo ""
+	@echo ""
 	@echo " 		LED_BLINK				compile the file for one LED blink"
 	@echo " 		LED_thread				compile the file for one LED blink controled by thread"
 	@echo " 		LEDs_threads				compile the file for two LED blink controled by threads"
@@ -38,7 +42,8 @@ LEDs_threads : blink01_pt.x
 
 LED_BP : blink01_bp_pt.x
 
-
+source: 
+	source /users/enseig/franck/IOC/export_rpi_toolchain.sh
 
 copy: *.x
 	scp -P 622$(RPI) $^ pi@peri:$(NAME)
