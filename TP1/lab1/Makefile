@@ -23,8 +23,8 @@ help:
 	@echo " 		LEDs_threads				compile the file for two LED blink controled by threads"
 	@echo " 		LED_BP					compile the file for LED controled by BP"
 	@echo "									option [-B cond=0] change the defined value of condition in the program to 0"
-	@echo "									option [-B cond=1] change the defined value of condition in the program to 1"
-	@echo "									option [-B cond=2] change the defined value of condition in the program to 2"
+	@echo "									option [-B cond=1] change the defined value of condition in the program to 1 Telerupteur" 
+	@echo "									option [-B cond=2] change the defined value of condition in the program to 2 Last task"
 	@echo ""
 	@echo ""
 	@echo " 		clean					clean all except sources"
@@ -41,9 +41,6 @@ LED_thread : blink0_pt.x
 LEDs_threads : blink01_pt.x
 
 LED_BP : blink01_bp_pt.x
-
-source: 
-	source /users/enseig/franck/IOC/export_rpi_toolchain.sh
 
 copy: *.x
 	scp -P 622$(RPI) $^ pi@peri:$(NAME)
