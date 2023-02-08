@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "read_bp.h"
 //------------------------------------------------------------------------------
 // GPIO ACCES
 //------------------------------------------------------------------------------
@@ -26,8 +27,7 @@
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
-// Three kinds of functions :
-//                              Set condition to 0, the LED1 blinks during the BP is pressed
+// Two kinds of functions :
 //                              Set condition to 1, the LED1 start blinking when the BP is pressed once and stop blinking when the BP is pressed again
 //                              Set condition to 2, the LED1 blinks with the same rithme of LED0 when the BP is pressed once
 //                                                  the LED1 blinks with the oposite rithme of LED0 when the BP is pressed again
@@ -43,7 +43,7 @@
 int BP_ON;   // mis a 1 si le bouton a ete appuye, mis a 0 quand la tache qui attend l'appui a vu l'appui
 int BP_OFF;  // mis a 1 si le bouton a ete relache, mis a 0 quand la tache qui attend le relachement a vu le relachement
 
-int val_global = 0;
+int val_global = 0; // the val going to write in the port GPIO of LED
 
 struct gpio_s
 {
@@ -151,27 +151,27 @@ delay ( unsigned int milisec )
 }
 
 
-// On utiliser la fonction pour detecter le front montant/ front decendant 
-// Il faut le entré period = 0.02*1000 pour avoir peride de 20ms
+// We use the function to detect the rising edge / falling edge 
+// You need to enter period = 0.02*1000 to have a period of 20ms
 // ---------------------------------------------
 void *bouton(void* period) {  
     
-    unsigned int T = *(unsigned int*)period;
+    unsigned int T = *(unsigned int*)period;    // change the type of input to unsigned int
 
-    int val_prec = 1;   // memoir des etats precedent et nouveau
-    int val_nouv = 1;
+    int val_pre = 1;                           // memory of the previous state
+    int val_new = 1;                           // memory of the new state
 
     printf ( "-- info: start reading.\n" );
 	while(1){
-        delay(T);       
-        val_nouv = gpio_read ( GPIO_BP );
-        if (val_prec != val_nouv){
-            if(val_nouv == 0){
+        delay(T);                               // test every T/1000 second
+        val_new = gpio_read ( GPIO_BP );
+        if (val_pre != val_new){              // if the state changes
+            if(val_new == 0){                  // if the new state is '0'
                 BP_ON = 1;
-            }else{
+            }else{                              // if the new state is '1'
                 BP_OFF = 1;
             }
-            val_prec = val_nouv;
+            val_pre = val_new;                // save the new state
         }
 
     }
@@ -224,46 +224,6 @@ void *blink_LED0_global_value(void* period) {
 	pthread_exit(EXIT_SUCCESS);                 // send the signal to tell the main that the thread is done
 }
 
-// Fonction to blink LED1 at frequency of 1/period during pressing the button
-// ---------------------------------------------
-void *blink_LED1_during_press_button(void* period) {
-    
-    uint32_t val = 0;                           // Val : value to write in the GPIO of LED port
-    unsigned int T = *(unsigned int*)period;    // Convert the input period of type void* to unsigned* 
-                                                // Stock the value in the T the value stock in the adresse
-     
-    int clignote = 0;                           // variable to tell the Led blink or not 
-                                                // inisial to '0' for not blink
-    int cpt =  0;                               // counter to slow down the frequence of blinking
-
-    printf ( "-- info: start LED1 .\n" );
-	while(1){
-        if (BP_ON == 1){                            // press the button
-            clignote = 1;                           // change the LED to blink
-            BP_ON = 0;                              // reinsital the value global
-        }   
-        if(BP_OFF == 1){                            // release the button
-            clignote = 0;                           // change the LED to not blink
-            BP_OFF = 0;                             // reinsital the value global
-        }
-        
-        if (clignote == 1){
-            gpio_write ( GPIO_LED1, val );          // affich the value val with the LED1
-            cpt++;                                  // add 1 to counter
-            if(cpt == 4){                           // freaquence of the light blink is 1/(period*5)
-                val = 1 - val;                      // Inverse the value of val '0' to '1' or '1' to '0'
-                cpt = 0;                            // reset counter
-            }
-        }else{
-            gpio_write ( GPIO_LED1, 0 );            // close LED1 when clignote is unable
-        }
-        delay(T);                                   // Wait for T(s)
-        printf("%d, %d, %d, %d\n", BP_ON, BP_OFF, clignote, cpt);
-	}
-    
-	// Arrêt propre du thread
-	pthread_exit(EXIT_SUCCESS);                 // send the signal to tell the main that the thread is done
-}
 
 // Fonction to télérupteur LED1 at frequency of 1/period when press the button
 // ---------------------------------------------
@@ -295,7 +255,6 @@ void *blink_LED1_when_press_button(void* period) {
             gpio_write ( GPIO_LED1, 0 );            // close LED1 when clignote is unable
         }
         delay(T);                                   // Wait for T(s)
-        printf("%d, %d, %d, %d\n", BP_ON, BP_OFF, clignote, cpt);
 	}
     
 	// Arrêt propre du thread
@@ -309,8 +268,6 @@ void *blink_LED1_global_value(void* period) {
     unsigned int T = *(unsigned int*)period;    // Convert the input period of type void* to unsigned* 
                                                 // Stock the value in the T the value stock in the adresse
      
-    int clignote = 0;                           // variable to tell the Led blink or not 
-                                                // inisial to '0' for not blink                     
     int etat =  0;                              // etat == 0 : LED1 close
                                                 // etat == 1 : LED1 blink en phase with LED0
                                                 // etat == 2 : LED1 blink en phase oppsite with LED0
@@ -382,10 +339,7 @@ int main ( int argc, char **argv )
 	printf("Before the creation of threads.\n");                           // Debug using Point before threads created
 	// Create the threads
 	
-    #if condition == 0  
-    pthread_create(&t1, NULL, blink_LED1_during_press_button, (void *) &bouton_periode);
-    pthread_create(&t2, NULL, blink_LED0, (void *) &one_third_period);
-    #elif condition == 1
+    #if condition == 1
     pthread_create(&t1, NULL, blink_LED1_when_press_button, (void *) &bouton_periode);
     pthread_create(&t2, NULL, blink_LED0, (void *) &one_third_period);
     #elif condition == 2

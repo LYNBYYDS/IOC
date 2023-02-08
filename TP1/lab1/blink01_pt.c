@@ -131,16 +131,17 @@ void *blink_LED0(void* period) {
     uint32_t val = 0;                           // Val : value to write in the GPIO of LED port
     unsigned int T = *(unsigned int*)period;    // Convert the input period of type void* to unsigned* 
                                                 // Stock the value in the T the value stock in the adresse
-    int cpt = 0;                                // Counter for the times that light blink(2x cause one blink is one time 0 and one time 1)
-    int nb_blink = 20;                          // Times the light going to blink
+    //int cpt = 0;                              // Counter for the times that light blink(2x cause one blink is one time 0 and one time 1)
+    //int nb_blink = 20;                        // Times the light going to blink
     printf ( "-- info: start blinking.\n" );    // Debug using To tell the light going to blink
 
     // Blink the light and add 1 to the counter
-	while(cpt < nb_blink*2){
-		gpio_write ( GPIO_LED0, val );          // Write in the port GPIO which LED0 correspond to 
-        	delay(T);                           // Wait for T(s)
-        	val = 1 - val;                      // Inverse the value of val '0' to '1' or '1' to '0'
-            cpt++;                              // add 1 to counter
+	//while(cpt < nb_blink*2){
+	while(1){
+    	gpio_write ( GPIO_LED0, val );          // Write in the port GPIO which LED0 correspond to 
+        delay(T);                               // Wait for T(s)
+        val = 1 - val;                          // Inverse the value of val '0' to '1' or '1' to '0'
+    //        cpt++;                            // add 1 to counter
 	}
 	// Arrêt propre du thread
 	pthread_exit(EXIT_SUCCESS);                 // send the signal to tell the main that the thread is done
@@ -153,16 +154,17 @@ void *blink_LED1(void* period) {
     uint32_t val = 0;                           // Val : value to write in the GPIO of LED port
     unsigned int T = *(unsigned int*)period;    // Convert the input period of type void* to unsigned* 
                                                 // Stock the value in the T the value stock in the adresse
-    int cpt = 0;                                // Counter for the times that light blink(2x cause one blink is one time 0 and one time 1)
-    int nb_blink = 20;                          // Times the light going to blink
+    //int cpt = 0;                              // Counter for the times that light blink(2x cause one blink is one time 0 and one time 1)
+    //int nb_blink = 20;                        // Times the light going to blink
     printf ( "-- info: start blinking.\n" );    // Debug using To tell the light going to blink
 
     // Blink the light and add 1 to the counter
-	while(cpt < nb_blink*2){
+	//while(cpt < nb_blink*2){
+	while(1){
 		gpio_write ( GPIO_LED1, val );          // Write in the port GPIO which LED0 correspond to 
-        	delay(T);                           // Wait for T(s)
-        	val = 1 - val;                      // Inverse the value of val '0' to '1' or '1' to '0'
-            cpt++;                              // add 1 to counter
+        delay(T);                               // Wait for T(s)
+        val = 1 - val;                          // Inverse the value of val '0' to '1' or '1' to '0'
+    //    cpt++;                                // add 1 to counter
 	}
 	// Arrêt propre du thread
 	pthread_exit(EXIT_SUCCESS);                 // send the signal to tell the main that the thread is done
@@ -180,9 +182,9 @@ int main ( int argc, char **argv )
         period = atoi ( argv[1] );              
     }
 
-    half_period = period / 2;
+    half_period = period / 2;                   // 2Hz
 
-    one_third_period = period / 3;
+    one_third_period = period / 3;              // 3Hz
 
     // uint32_t volatile * gpio_base = 0;
     
@@ -201,9 +203,6 @@ int main ( int argc, char **argv )
     gpio_fsel(GPIO_LED0, GPIO_FSEL_OUTPUT);
 
     
-
-    
-
     // Create the pointer where we are going to create our thread
 	pthread_t t1,t2;
 

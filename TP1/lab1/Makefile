@@ -2,30 +2,24 @@ NAME = li_authier # nom1_nom2
 RPI ?= 23 # card_number
 
 CROSS_COMPILE ?= bcm2708hardfp-
-cond ?= 0
+cond ?= 2
 CFLAGS=-Wall -Wfatal-errors -O2 -Dcondition=$(cond)
 LDFLAGS=-static  -lpthread 
 
 help:
 	@echo ""
-	@echo ""
-	@echo "make [option]"	
-	@echo ""
+	@echo "	make [option] :"	
 	@echo ""
 	@echo " 		all					clean all and recompile"
 	@echo ""
-	@echo "			source					include source"
-	@echo ""
-	@echo ""
+	@echo "		source					include source"
 	@echo ""
 	@echo " 		LED_BLINK				compile the file for one LED blink"
 	@echo " 		LED_thread				compile the file for one LED blink controled by thread"
 	@echo " 		LEDs_threads				compile the file for two LED blink controled by threads"
 	@echo " 		LED_BP					compile the file for LED controled by BP"
-	@echo "									option [-B cond=0] change the defined value of condition in the program to 0"
-	@echo "									option [-B cond=1] change the defined value of condition in the program to 1 Telerupteur" 
-	@echo "									option [-B cond=2] change the defined value of condition in the program to 2 Last task"
-	@echo ""
+	@echo "							option [-B] [cond=1] : Telerupteur" 
+	@echo "							option [-B] [cond=2] or default :  Last task"
 	@echo ""
 	@echo " 		clean					clean all except sources"
 	@echo ""
@@ -46,7 +40,7 @@ copy: *.x
 	scp -P 622$(RPI) $^ pi@peri:$(NAME)
 
 %.x: %.c
-	$(CROSS_COMPILE)gcc -o $@ $^ $(LDFLAGS)  $(CFLAGS)
+	$(CROSS_COMPILE)gcc -o $@ $^ $(LDFLAGS) $(CFLAGS)
 
 clean:
 	rm -f *.o *.x *~ *.a
