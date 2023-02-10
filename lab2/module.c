@@ -3,7 +3,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
-MODULE_DESCRIPTION("ModuleLA");
+MODULE_DESCRIPTION("Module");
 
 #define NBMAX_LED 32
 static int leds[NBMAX_LED];
