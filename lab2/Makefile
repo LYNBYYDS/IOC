@@ -1,7 +1,7 @@
 CARD_NUMB       = 23
 ROUTER          = peri
 LOGIN           = li_authier
-LAB             = TP2
+LAB             = lab2
 
 MODULE          = module
 
