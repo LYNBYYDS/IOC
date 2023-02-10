@@ -28,6 +28,24 @@ struct gpio_s
 }
 volatile *gpio_regs = (struct gpio_s *)__io_address(GPIO_BASE);
 
+/* Focntion de controle des GPIO*/
+static void gpio_fsel(int pin, int fun)
+{
+    uint32_t reg = pin / 10;
+    uint32_t bit = (pin % 10) * 3;
+    uint32_t mask = 0b111 << bit;
+    gpio_regs->gpfsel[reg] = (gpio_regs->gpfsel[reg] & ~mask) | ((fun << bit) & mask);
+}
+
+static void gpio_write(int pin, bool val)
+{
+    if (val)
+        gpio_regs->gpset[pin / 32] = (1 << (pin % 32));
+    else
+        gpio_regs->gpclr[pin / 32] = (1 << (pin % 32));
+}
+
+/* Fonction du driver*/
 static int 
 open_led_LA(struct inode *inode, struct file *file) {
     printk(KERN_DEBUG "open()\n");
@@ -58,7 +76,7 @@ release_led_LA(struct inode *inode, struct file *file) {
     printk(KERN_DEBUG "close()\n");
 
 
-    
+
     return 0;
 }
 
