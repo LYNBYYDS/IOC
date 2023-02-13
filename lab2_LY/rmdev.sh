@@ -1,6 +1,14 @@
 #!/bin/sh
-module=$1
-/sbin/rmmod $module || exit 1
-rm -f /dev/$module
-echo "=> Device /dev/$module removed"
+
+module_led0=led0_LA
+module_bp=bp_LA
+
+/sbin/rmmod $module_led0 || exit 1
+rm -f /dev/$module_led0
+echo "=> Device /dev/$module_led0 removed"
+
+
+/sbin/rmmod $module_bp || exit 1
+rm -f /dev/$module_bp
+echo "=> Device /dev/$module_bp removed"
 

@@ -17,6 +17,8 @@ CROSS_COMPILE   = $(CROSSDIR)/arm-bcm2708hardfp-linux-gnueabi/bin/bcm2708hardfp-
 obj-m           += $(MODULE_LED0).o
 obj-m           += $(MODULE_bp).o
 
+all : clean default main.x upload uploadsh
+
 # Default target to build the modules
 default:;       make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) modules
 
@@ -27,8 +29,14 @@ clean:;         make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$
 upload:
 	scp -P622$(CARD_NUMB) $(MODULE_LED0).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) $(MODULE_bp).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
+	scp -P622$(CARD_NUMB) main.x pi@$(ROUTER):$(LOGIN)/$(LAB)
 
 # Target to upload shell scripts to the Raspberry Pi
 uploadsh:
 	scp -P622$(CARD_NUMB) insdev.sh pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) rmdev.sh pi@$(ROUTER):$(LOGIN)/$(LAB)
+	
+
+
+main.x: main.c
+	$(CROSS_COMPILE)gcc -o $@ $^ $(LDFLAGS) $(CFLAGS)

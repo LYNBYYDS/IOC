@@ -19,7 +19,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
-MODULE_DESCRIPTION("Module LED0");
+MODULE_DESCRIPTION("Module led0");
 
 struct gpio_s
 {
@@ -61,7 +61,7 @@ gpio_write(int pin, bool val)
 static int major;
 
 static int 
-open_LED0_LA(struct inode *inode, struct file *file) {
+open_led0_LA(struct inode *inode, struct file *file) {
 
     printk(KERN_DEBUG "LED0 initialised!\n");
     
@@ -75,45 +75,51 @@ open_LED0_LA(struct inode *inode, struct file *file) {
 }
 
 static ssize_t 
-read_LED0_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
-    printk(KERN_DEBUG "ERROR: Can not read on LED0!\n");
+read_led0_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
+    printk(KERN_DEBUG "ERROR: Can not read on led0!\n");
     return count;
 }
 
 static ssize_t 
-write_LED0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
-    printk(KERN_DEBUG "Writing on LED0!\n");
-    gpio_write(GPIO_LED0, 1);
+write_led0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
+    printk(KERN_DEBUG "Writing on led0! buf = %d\n", buf[0]);
+    if (buf[0] == '0') {
+        printk(KERN_DEBUG "write 0\n");
+        gpio_write(GPIO_LED0, 0);
+    }
+    else if (buf[0] == '1') {
+        printk(KERN_DEBUG "write 1\n");
+        gpio_write(GPIO_LED0, 1);
+    }
     return count;
 }
 
 static int 
-release_LED0_LA(struct inode *inode, struct file *file) {
+release_led0_LA(struct inode *inode, struct file *file) {
     printk(KERN_DEBUG "LED stop work!\n");
     return 0;
 }
 
-struct file_operations fops_LED0_LA =
+struct file_operations fops_led0_LA =
 {
-    .open       = open_LED0_LA,
-    .read       = read_LED0_LA,
-    .write      = write_LED0_LA,
-    .release    = release_LED0_LA
+    .open       = open_led0_LA,
+    .read       = read_led0_LA,
+    .write      = write_led0_LA,
+    .release    = release_led0_LA
 };
 
 static int __init mon_module_init(void)
 {
     // enregistrement du driver
-    major = register_chrdev(0, "LED0_LA", &fops_LED0_LA);        // 0 To let linux chose the major number
-
-    printk(KERN_DEBUG "LED0_LA connected!\n");
+    major = register_chrdev(0, "led0_LA", &fops_led0_LA);        // 0 To let linux chose the major number
+    printk(KERN_DEBUG "led0_LA connected!\n");
     
 }
 
 static void __exit mon_module_cleanup(void)
 {
-    unregister_chrdev(major, "LED0_LA");                     // Fonction pour dechatger le driver
-    printk(KERN_DEBUG "LED0_LA deconnected!\n");              // Indique la fin du module
+    unregister_chrdev(major, "led0_LA");                     // Fonction pour dechatger le driver
+    printk(KERN_DEBUG "led0_LA deconnected!\n");              // Indique la fin du module
 }
 
 

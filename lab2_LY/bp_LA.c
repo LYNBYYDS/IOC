@@ -75,8 +75,15 @@ open_bp_LA(struct inode *inode, struct file *file) {
 
 static ssize_t 
 read_bp_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
-    printk(KERN_DEBUG "Reading BP\n");
-    return gpio_read(GPIO_BP);
+    printk(KERN_DEBUG "Reading BP!\n");
+    if (gpio_read(GPIO_BP) == 1) {
+        printk(KERN_DEBUG "bp : 1\n");
+        buf[0] = "1";
+    }else if (gpio_read(GPIO_BP) == 0) {
+        printk(KERN_DEBUG "bp : 0\n");
+        buf[0] = "0";
+    }
+    return count;
 }
 
 static ssize_t 
@@ -103,7 +110,6 @@ static int __init mon_module_init(void)
 {
     // enregistrement du driver
     major = register_chrdev(0, "bp_LA", &fops_bp);        // 0 To let linux chose the major number
-
     printk(KERN_DEBUG "bp_LA connected!\n");
     
 }
