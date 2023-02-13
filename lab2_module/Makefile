@@ -6,6 +6,7 @@ LAB             = lab2
 
 # Define the names of the kernel modules
 MODULE_LED0		= led0_LA
+MODULE_LED1		= led1_LA
 MODULE_bp		= bp_LA
 
 # Define paths for the cross compiler and kernel source
@@ -15,6 +16,7 @@ CROSS_COMPILE   = $(CROSSDIR)/arm-bcm2708hardfp-linux-gnueabi/bin/bcm2708hardfp-
 
 # Add the modules to the list of objects to be built
 obj-m           += $(MODULE_LED0).o
+obj-m           += $(MODULE_LED1).o
 obj-m           += $(MODULE_bp).o
 
 all : clean default main.x upload uploadsh
@@ -28,6 +30,7 @@ clean:;         make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$
 # Target to upload the kernel modules to the Raspberry Pi
 upload:
 	scp -P622$(CARD_NUMB) $(MODULE_LED0).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
+	scp -P622$(CARD_NUMB) $(MODULE_LED1).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) $(MODULE_bp).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) main.x pi@$(ROUTER):$(LOGIN)/$(LAB)
 
@@ -35,8 +38,6 @@ upload:
 uploadsh:
 	scp -P622$(CARD_NUMB) insdev.sh pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) rmdev.sh pi@$(ROUTER):$(LOGIN)/$(LAB)
-	
-
 
 main.x: main.c
 	$(CROSS_COMPILE)gcc -o $@ $^ $(LDFLAGS) $(CFLAGS)
