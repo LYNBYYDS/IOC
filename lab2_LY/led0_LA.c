@@ -82,13 +82,13 @@ read_led0_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
 
 static ssize_t 
 write_led0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
-    printk(KERN_DEBUG "Writing on led0! buf = %d\n", buf[0]);
+    printk(KERN_DEBUG "Writing on led0! Value input : %d\n", buf[0]);
     if (buf[0] == '0') {
-        printk(KERN_DEBUG "write 0\n");
+        printk(KERN_DEBUG "Light off!\n");
         gpio_write(GPIO_LED0, 0);
     }
     else if (buf[0] == '1') {
-        printk(KERN_DEBUG "write 1\n");
+        printk(KERN_DEBUG "Light on!\n");
         gpio_write(GPIO_LED0, 1);
     }
     return count;

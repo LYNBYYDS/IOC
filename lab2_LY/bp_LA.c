@@ -76,12 +76,12 @@ open_bp_LA(struct inode *inode, struct file *file) {
 static ssize_t 
 read_bp_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
     printk(KERN_DEBUG "Reading BP!\n");
-    if (gpio_read(GPIO_BP) == 1) {
-        printk(KERN_DEBUG "bp : 1\n");
-        buf[0] = "1";
-    }else if (gpio_read(GPIO_BP) == 0) {
+    if (gpio_read(GPIO_BP) == 0) {
         printk(KERN_DEBUG "bp : 0\n");
-        buf[0] = "0";
+        buf[0] = '0';
+    }else {
+        printk(KERN_DEBUG "bp : 1\n");
+        buf[0] = '1';
     }
     return count;
 }
