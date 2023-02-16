@@ -25,6 +25,10 @@
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
+#ifndef FREQ
+#define FREQ 1
+#endif
+
 struct gpio_s
 {
     uint32_t gpfsel[7];
@@ -129,13 +133,13 @@ main ( int argc, char **argv )
     // Get args
     // ---------------------------------------------
 
-    int period, half_period;
+    int period, used_period;
 
     period = 1000; /* default = 1Hz */
     if ( argc > 1 ) {
         period = atoi ( argv[1] );
     }
-    half_period = period / 2;
+    used_period = period / FREQ;
     
     //uint32_t volatile * gpio_base = 0;
 
@@ -161,7 +165,7 @@ main ( int argc, char **argv )
 
     while (1) {
         gpio_write ( GPIO_LED0, val );
-        delay ( half_period );
+        delay ( used_period );
         val = 1 - val;
     }
 

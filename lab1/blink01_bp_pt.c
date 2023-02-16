@@ -28,14 +28,18 @@
 #define GPIO_FSEL_OUTPUT 1
 
 // Two kinds of functions :
-//                              Set condition to 1, the LED1 start blinking when the BP is pressed once and stop blinking when the BP is pressed again
-//                              Set condition to 2, the LED1 blinks with the same rithme of LED0 when the BP is pressed once
+//                              Set COND to 1, the LED1 start blinking when the BP is pressed once and stop blinking when the BP is pressed again
+//                              Set COND to 2, the LED1 blinks with the same rithme of LED0 when the BP is pressed once
 //                                                  the LED1 blinks with the oposite rithme of LED0 when the BP is pressed again
 //                                                  the LED1 stop blinking when the BP is pressed again
 
 
-#ifndef condition
-#define condition 2
+#ifndef COND
+#define COND 2
+#endif
+
+#ifndef FREQ
+#define FREQ 3
 #endif
 
 // variable global pour le partage de l'information du bouton poussoir
@@ -297,14 +301,14 @@ int main ( int argc, char **argv )
 {
     // Get args
     // ---------------------------------------------
-    int period, one_third_period, bouton_periode;   // , half_period
+    int period, used_period, bouton_periode;   // , half_period
 
     period = 1000; /* default = 1Hz */
     if ( argc > 1 ) {
         period = atoi ( argv[1] );
     }
-    // half_period = period / 2;
-    one_third_period = period / 3;
+    
+    used_period = period / FREQ;
     bouton_periode = period/50; 
 
     // uint32_t volatile * gpio_base = 0;
@@ -339,12 +343,12 @@ int main ( int argc, char **argv )
 	printf("Before the creation of threads.\n");                           // Debug using Point before threads created
 	// Create the threads
 	
-    #if condition == 1
+    #if COND == 1
     pthread_create(&t1, NULL, blink_LED1_when_press_button, (void *) &bouton_periode);
-    pthread_create(&t2, NULL, blink_LED0, (void *) &one_third_period);
-    #elif condition == 2
+    pthread_create(&t2, NULL, blink_LED0, (void *) &used_period);
+    #elif COND == 2
     pthread_create(&t1, NULL, blink_LED1_global_value, (void *) &bouton_periode);
-    pthread_create(&t2, NULL, blink_LED0_global_value, (void *) &one_third_period);
+    pthread_create(&t2, NULL, blink_LED0_global_value, (void *) &used_period);
     #endif
 
 	

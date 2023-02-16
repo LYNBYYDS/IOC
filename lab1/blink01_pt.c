@@ -26,6 +26,10 @@
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
+#ifndef FREQ
+#define FREQ 1
+#endif
+
 struct gpio_s
 {
     uint32_t gpfsel[7];
@@ -175,7 +179,7 @@ int main ( int argc, char **argv )
 {
     // Get arguments
     // ---------------------------------------------
-    int period, half_period, one_third_period;  // Inistial the variable period, period/2, period/3 
+    int period, half_period, used_period;  // Inistial the variable period, period/2, period/3 
 
     period = 1000;                              // Default = 1Hz
     if ( argc > 1 ) {
@@ -184,7 +188,7 @@ int main ( int argc, char **argv )
 
     half_period = period / 2;                   // 2Hz
 
-    one_third_period = period / 3;              // 3Hz
+    used_period = period / FREQ;              // customed freqence 1Hz by default
 
     // uint32_t volatile * gpio_base = 0;
     
@@ -210,7 +214,7 @@ int main ( int argc, char **argv )
 	
     // Create the threads
 	pthread_create(&t1, NULL, blink_LED0, (void *) &half_period); 
-	pthread_create(&t2, NULL, blink_LED1, (void *) &one_third_period);
+	pthread_create(&t2, NULL, blink_LED1, (void *) &used_period);
 	printf("After the creation of threads.\n");                           // Debug using Point after threads created
 
     // Wait for the threads finsih

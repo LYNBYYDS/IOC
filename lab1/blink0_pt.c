@@ -26,6 +26,10 @@
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
+#ifndef FREQ
+#define FREQ 1
+#endif
+
 struct gpio_s
 {
     uint32_t gpfsel[7];
@@ -148,13 +152,13 @@ int main ( int argc, char **argv )
 {
     // Get args
     // ---------------------------------------------
-    int period, half_period;
+    int period, used_period;
 
     period = 1000; /* default = 1Hz */
     if ( argc > 1 ) {
         period = atoi ( argv[1] );
     }
-    half_period = period / 2;
+    used_period = period / FREQ;
 
     // uint32_t volatile * g    io_base = 0;
     
@@ -182,7 +186,7 @@ int main ( int argc, char **argv )
 
 	printf("Avant la création du thread.\n");
 	// Création du thread
-	pthread_create(&t1, NULL, cligner, (void *) &half_period);
+	pthread_create(&t1, NULL, cligner, (void *) &used_period);
 	printf("Après la création du thread.\n");
 
 
