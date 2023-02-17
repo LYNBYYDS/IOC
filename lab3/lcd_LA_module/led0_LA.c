@@ -1,25 +1,47 @@
+/*******************************************************************************
+ * lcd_LA.c - Controleur pour LCd HD44780 ( 20x4 )
+ ******************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/fs.h>
-
 #include <asm/io.h>
 #include <mach/platform.h>
 
-#define GPIO_BASE 0x20200000
+/*******************************************************************************
+ * GPIO Pins
+ ******************************************************************************/
+#define RPI_PERIPH_BASE     0x20000000
+#define RPI_GPIO_BASE       ( BCM2835_PERIPH_BASE + 0x200000 )
+#define RPI_BLOCK_SIZE          0xB4
 
-#define BCM2835_PERIPH_BASE     0x20000000
-#define BCM2835_GPIO_BASE       ( BCM2835_PERIPH_BASE + 0x200000 )
+#define RS                      7
+#define E                       27
+#define D4                      22
+#define D5                      23
+#define D6                      24
+#define D7                      25
 
-#define GPIO_LED0   4
-#define GPIO_LED1   17
-#define GPIO_BP     18
+#define GPIO_LED0               4
+#define GPIO_LED1               17
+#define GPIO_BP                 18
 
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
-MODULE_DESCRIPTION("Module led1");
+MODULE_DESCRIPTION("Module lcd");
 
 // Structure to represent the layout of the memory-mapped I/O for the Raspberry Pi's GPIO
 struct gpio_s
@@ -42,9 +64,14 @@ struct gpio_s
 // Pointer to the base address of the GPIO I/O
 volatile *gpio_regs = (struct gpio_s *)__io_address(GPIO_BASE);
 
-/* gpio_fsel - function to configure the function of a specific GPIO pin */
+void gpio_teardown(void)
+{
+    munmap((void *) gpio_regs, RPI_BLOCK_SIZE);
+}
+
+/* gpio_config - function to configure the function of a specific GPIO pin */
 static void 
-gpio_fsel(int pin, int fun)
+gpio_config(int pin, int fun)
 {
     /* Calculate the register number for the given pin */
     uint32_t reg = pin / 10;
@@ -79,16 +106,16 @@ static int major;
 
 //This function is called when the device file is opened with open system call
 static int 
-open_led1_LA(struct inode *inode, struct file *file) {
+open_led0_LA(struct inode *inode, struct file *file) {
 
-    //Print a debug message indicating that the LED1 has been initialized
-    printk(KERN_DEBUG "LED1 initialised!\n");
+    //Print a debug message indicating that the LED0 has been initialized
+    printk(KERN_DEBUG "LED0 initialised!\n");
     
-    // Setup the GPIO pin for LED1 as an output pin
-    gpio_fsel(GPIO_LED1, GPIO_FSEL_OUTPUT);
+    // Setup the GPIO pin for LED0 as an output pin
+    gpio_fsel(GPIO_LED0, GPIO_FSEL_OUTPUT);
 
-    //Print a debug message indicating that the LED1 is ready to be written on
-    printk(KERN_DEBUG "LED1 can be write on!\n");
+    //Print a debug message indicating that the LED0 is ready to be written on
+    printk(KERN_DEBUG "LED0 can be write on!\n");
 
     //Return 0 to indicate successful completion
     return 0;
@@ -96,9 +123,9 @@ open_led1_LA(struct inode *inode, struct file *file) {
 
 //This function is called when the device file is read from with read system call
 static ssize_t 
-read_led1_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
-    //Print a debug message indicating that reading from the LED1 is not supported
-    printk(KERN_DEBUG "ERROR: Can not read on led1!\n");
+read_led0_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
+    //Print a debug message indicating that reading from the LED0 is not supported
+    printk(KERN_DEBUG "ERROR: Can not read on led0!\n");
 
     //Return the count of bytes read, which is 0 in this case
     return count;
@@ -106,25 +133,25 @@ read_led1_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
 
 //This function is called when the device file is written to with write system call
 static ssize_t 
-write_led1_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
-    //Print a debug message indicating the value that is being written to the LED1
-    printk(KERN_DEBUG "Writing on led1! Value input : %d\n", buf[0]);
+write_led0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
+    //Print a debug message indicating the value that is being written to the LED0
+    printk(KERN_DEBUG "Writing on led0! Value input : %d\n", buf[0]);
 
-    //If the value being written is '0', turn off the LED1
+    //If the value being written is '0', turn off the LED0
     if (buf[0] == '0') {
-        //Print a debug message indicating that the LED1 has been turned off
+        //Print a debug message indicating that the LED0 has been turned off
         printk(KERN_DEBUG "Light off!\n");
 
-        //Turn off the LED1 by writing 0 to the GPIO pin
-        gpio_write(GPIO_LED1, 0);
+        //Turn off the LED0 by writing 0 to the GPIO pin
+        gpio_write(GPIO_LED0, 0);
     }
-    //If the value being written is '1', turn on the LED1
+    //If the value being written is '1', turn on the LED0
     else if (buf[0] == '1') {
-        //Print a debug message indicating that the LED1 has been turned on
+        //Print a debug message indicating that the LED0 has been turned on
         printk(KERN_DEBUG "Light on!\n");
 
-        //Turn on the LED1 by writing 1 to the GPIO pin
-        gpio_write(GPIO_LED1, 1);
+        //Turn on the LED0 by writing 1 to the GPIO pin
+        gpio_write(GPIO_LED0, 1);
     }
 
     //Return the count of bytes written, which is equal to the count parameter
@@ -133,34 +160,34 @@ write_led1_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
 
 //This function is called when the device file is closed with close system call
 static int 
-release_led1_LA(struct inode *inode, struct file *file) {
-    //Print a debug message indicating that the LED1 has stopped working
+release_led0_LA(struct inode *inode, struct file *file) {
+    //Print a debug message indicating that the LED0 has stopped working
     printk(KERN_DEBUG "LED stop work!\n");
 
     //Return 0 to indicate successful completion
     return 0;
 }
-// Definition of file operations for LED1 character device driver
-struct file_operations fops_led1_LA = {
-    .open       = open_led1_LA,  // function to be called when the device is opened
-    .read       = read_led1_LA,  // function to be called when the device is read
-    .write      = write_led1_LA, // function to be called when the device is written to
-    .release    = release_led1_LA // function to be called when the device is closed
+// Definition of file operations for LED0 character device driver
+struct file_operations fops_led0_LA = {
+    .open       = open_led0_LA,  // function to be called when the device is opened
+    .read       = read_led0_LA,  // function to be called when the device is read
+    .write      = write_led0_LA, // function to be called when the device is written to
+    .release    = release_led0_LA // function to be called when the device is closed
 };
 
 // Initialization function for the module
 static int __init mon_module_init(void)
 {
     // Registering the character device driver
-    major = register_chrdev(0, "led1_LA", &fops_led1_LA);  // 0 To let linux choose the major number
-    printk(KERN_DEBUG "led1_LA connected!\n");
+    major = register_chrdev(0, "led0_LA", &fops_led0_LA);  // 0 To let linux choose the major number
+    printk(KERN_DEBUG "led0_LA connected!\n");
 }
 
 // Cleanup function for the module
 static void __exit mon_module_cleanup(void)
 {
-    unregister_chrdev(major, "led1_LA"); // Function to unload the driver
-    printk(KERN_DEBUG "led1_LA deconnected!\n"); // Indicates the end of the module
+    unregister_chrdev(major, "led0_LA"); // Function to unload the driver
+    printk(KERN_DEBUG "led0_LA deconnected!\n"); // Indicates the end of the module
 }
 
 // Register the init and cleanup functions with the kernel

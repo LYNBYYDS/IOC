@@ -191,7 +191,7 @@ void lcd_init(void)
     lcd_command(0b00110011);    /* initialization */
     lcd_command(0b00110010);    /* initialization */
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS);
-    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSOROFF);
+    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSORON);
     lcd_command(LCD_ENTRYMODESET | LCD_EM_RIGHT | LCD_EM_DISPLAYNOSHIFT);
 }
 
@@ -214,6 +214,54 @@ void lcd_message(const char *txt)
             lcd_data(txt[i]);
         }
     }
+}
+
+void lcd_set_cursor(const int x, const int y) {
+    int x_s, j, i;
+
+    lcd_command(LCD_RETURNHOME);
+
+    /* Deplacement jusqu'a la bonne ligne */
+    if (y == 1){
+        for ( j = 0; j < 40; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }else if (y == 2){
+        for ( j = 0; j < 20; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }else if (y == 3){
+        for ( j = 0; j < 60; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }
+
+    /* Deplacement jusqu'a la bonne colonne */
+    for (x_s = 0; x_s < x; ++x_s) {
+        lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+    }
+}
+
+/* Deuxieme version de la fonction qui utilise LCD_SETDDRAMADDR*/
+void lcd_set_cursor_V2(const int x, const int y) {
+
+    int a[] = { 0, 0x40, 0x14, 0x54 };
+
+    /* Deplacement jusqu'a la bonne ligne avec l'adresse contenu dans a et on ajoute le decalage sur la bonne colonne */
+    lcd_command(LCD_SETDDRAMADDR + a[y] + x);
+}
+
+void lcd_message_bis(const char *txt){
+
+    int len = 20;
+    int i, y;
+    for(y = 0; y < 4; y++){
+        lcd_set_cursor_V2(5, y);
+        for (i = 0; i < strlen(txt); i++) {
+            lcd_data(txt[i]);
+        }   
+    }
+
 }
 
 /*******************************************************************************
@@ -245,11 +293,13 @@ int main(int argc, char **argv)
     lcd_init();
     lcd_clear();
 
+    /* change the place of the mouse*/
+
     /* affichage */
-    lcd_message(argv[1]);
+    lcd_message_bis(argv[1]);
 
     /* Release the GPIO memory mapping */
     gpio_teardown();
-
+    
     return 0;
 }
