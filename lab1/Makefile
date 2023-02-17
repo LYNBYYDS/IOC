@@ -5,11 +5,11 @@ RPI ?= 23 # Card number
 
 CROSS_COMPILE ?= bcm2708hardfp-
 cond ?= 2 # Condition variable for LED_BP program
-freq ?= 1 # Condition variable for all program
+freq ?= 3 # Condition variable for all program
 CFLAGS = -Wall -Wfatal-errors -O2 -DCOND=$(cond) -DFREQ=$(freq)
 LDFLAGS = -static -lpthread
 
-# Define phony targets
+# Define phony targetsoption [-B] [-Dfreq=1]: 
 
 .PHONY: all help clean copy
 
@@ -28,9 +28,10 @@ help:
 	@echo "		LEDs_threads compile program for two LED blink controlled by threads"
 	@echo "		LED_BP      compile program for LED controlled by button"
 	@echo ""
-	@echo "		            option [-B] [-Dcond=1]: control using a teleruptor"
-	@echo "		            option [-B] [-Dcond=2] or default: control using push button"
-	@echo "		            option [-B] [-Dfreq=1]: frquence customized to freq Hz"
+	@echo "		            option [-B] [cond=1]: control using a teleruptor"
+	@echo "		            option [-B] [cond=2] or default: control using push button"
+	@echo "		            frquence customized to freq Hz need to be given in make file 3Hz by default"
+	@echo "		            option [-B] [freq=2] "
 	@echo ""
 	@echo "		clean       clean all except sources"
 	@echo ""
@@ -39,7 +40,7 @@ help:
 
 # Define targets for building and copying programs
 
-all: clean LED_BLINK LED_thread LEDs_threads LED_BP
+all: clean LED_BLINK LED_thread LEDs_threads LED_BP 
 
 LED_BLINK: blink0.x
 
