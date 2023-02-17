@@ -1,12 +1,10 @@
 /*******************************************************************************
  * lcd_LA.c - Controleur pour LCd HD44780 ( 20x4 )
  ******************************************************************************/
-
-
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/fs.h>
+
 #include <asm/io.h>
 #include <asm/delay.h>
 #include <mach/platform.h>
@@ -14,9 +12,8 @@
 /*******************************************************************************
  * GPIO Pins
  ******************************************************************************/
-#define RPI_PERIPH_BASE     0x20000000
-#define RPI_GPIO_BASE       ( BCM2835_PERIPH_BASE + 0x200000 )
-#define RPI_BLOCK_SIZE          0xB4
+
+#define RPI_GPIO_BASE 0x20200000
 
 #define RS                      7
 #define E                       27
@@ -28,7 +25,7 @@
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
-
+#define nb 100
 /*******************************************************************************
  * LCD's Instructions ( source = doc )
  * Ces constantes sont utilisées pour former les mots de commandes
@@ -97,12 +94,12 @@ struct gpio_s
     uint32_t test[1]; // Test register
 }
 // Pointer to the base address of the GPIO I/O
-volatile *gpio_regs = (struct gpio_s *)__io_address(GPIO_BASE);
+volatile *gpio_regs = (struct gpio_s *)__io_address(RPI_GPIO_BASE);
 
 
-/* gpio_config - function to configure the function of a specific GPIO pin */
+/* gpio_fsel - function to configure the function of a specific GPIO pin */
 static void 
-gpio_config(int pin, int fun)
+gpio_fsel(int pin, int fun)
 {
     /* Calculate the register number for the given pin */
     uint32_t reg = pin / 10;
@@ -137,9 +134,11 @@ gpio_write(int pin, bool val)
 
 /* generate E signal */
 void lcd_strobe(void)
-{
+{   
     gpio_write(E, 1);
-    udelay(1);
+    int i;
+    for (i = 0 ; i < nb; i++){
+    udelay(1);}
     gpio_write(E, 0);
 }
 
@@ -166,14 +165,18 @@ void lcd_command(int cmd)
 {
     gpio_write(RS, 0);
     lcd_write4bits(cmd);
-    udelay(2000);               // certaines commandes sont lentes 
+    int i;
+    for (i = 0 ; i < nb; i++){
+    udelay(2000);}               // certaines commandes sont lentes 
 }
 
 void lcd_data(int character)
 {
     gpio_write(RS, 1);
     lcd_write4bits(character);
-    udelay(1);
+    int i;
+    for (i = 0 ; i < nb; i++){
+    udelay(1);}
 }
 
 /* initialization : pour comprendre la séquence, il faut regarder le cours */
@@ -184,7 +187,7 @@ void lcd_init(void)
     lcd_command(0b00110011);    /* initialization */
     lcd_command(0b00110010);    /* initialization */
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS);
-    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSORON);
+    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSOROFF);
     lcd_command(LCD_ENTRYMODESET | LCD_EM_RIGHT | LCD_EM_DISPLAYNOSHIFT);
 }
 
@@ -221,12 +224,12 @@ open_lcd0_LA(struct inode *inode, struct file *file) {
     printk(KERN_DEBUG "LCD0 initialised!\n");
     
     /* Setting up GPIOs to output */
-    gpio_config(RS, GPIO_FSEL_OUTPUT);
-    gpio_config(E,  GPIO_FSEL_OUTPUT);
-    gpio_config(D4, GPIO_FSEL_OUTPUT);
-    gpio_config(D5, GPIO_FSEL_OUTPUT);
-    gpio_config(D6, GPIO_FSEL_OUTPUT);
-    gpio_config(D7, GPIO_FSEL_OUTPUT);
+    gpio_fsel(RS, GPIO_FSEL_OUTPUT);
+    gpio_fsel(E,  GPIO_FSEL_OUTPUT);
+    gpio_fsel(D4, GPIO_FSEL_OUTPUT);
+    gpio_fsel(D5, GPIO_FSEL_OUTPUT);
+    gpio_fsel(D6, GPIO_FSEL_OUTPUT);
+    gpio_fsel(D7, GPIO_FSEL_OUTPUT);
 
     /* initialization */
     lcd_init();
@@ -256,7 +259,7 @@ write_lcd0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
     printk(KERN_DEBUG "Writing on lcd0! Value input : %s\n", buf);
 
     
-    lcd_message("text");
+    lcd_message(buf);
 
 
     //Return the count of bytes written, which is equal to the count parameter
@@ -267,7 +270,7 @@ write_lcd0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
 static int 
 release_lcd0_LA(struct inode *inode, struct file *file) {
     //Print a debug message indicating that the LCD0 has stopped working
-    printk(KERN_DEBUG "LED stop work!\n");
+    printk(KERN_DEBUG "LCD file closed!\n");
 
     //Return 0 to indicate successful completion
     return 0;
@@ -286,6 +289,7 @@ static int __init mon_module_init(void)
     // Registering the character device driver
     major = register_chrdev(0, "lcd0_LA", &fops_lcd0_LA);  // 0 To let linux choose the major number
     printk(KERN_DEBUG "lcd0_LA connected!\n");
+    return 0;
 }
 
 // Cleanup function for the module

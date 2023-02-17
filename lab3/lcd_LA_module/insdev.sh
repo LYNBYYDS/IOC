@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Define the name of the led0 and bp module
+# Define the name of the lcd
 module_lcd=lcd0_LA
 
 

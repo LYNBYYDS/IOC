@@ -30,7 +30,7 @@ void delay(unsigned int milisec) {
 
 int main() {
     
-    char* text = "hello LA";
+    char* text = "helloLA";
    
     // Open the device files
     int fdlcd = open("/dev/lcd0_LA", O_RDONLY);
@@ -40,8 +40,10 @@ int main() {
         fprintf(stderr, "Error: Can not open the driver for LCD0!\n");
         exit(1);
     }
-    
-        write(fdlcd, &text, 20);
+
+    write(fdlcd, &text, 20);
+    while(1){}
+        //
     
 
     return 0;
