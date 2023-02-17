@@ -1,7 +1,7 @@
 # changer les valeurs par dÃ©faut de RPI et DIR
 RPI?=20
-DIR?=binome
-APP=lcd_user
+DIR?=li_authier/lab3
+APP=lcd_LA
 
 CFLAGS=-Wall -Wfatal-errors -O2
 LDFLAGS=-static -L$(LIB) -lgpio
