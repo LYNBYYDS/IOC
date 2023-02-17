@@ -4,6 +4,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/fs.h>
+#include <linux/uaccess.h>
 
 #include <asm/io.h>
 #include <asm/delay.h>
@@ -25,7 +26,6 @@
 #define GPIO_FSEL_INPUT  0
 #define GPIO_FSEL_OUTPUT 1
 
-#define nb 100
 /*******************************************************************************
  * LCD's Instructions ( source = doc )
  * Ces constantes sont utilisées pour former les mots de commandes
@@ -71,9 +71,17 @@
 #define LCD_FS_5x8DOTS          0b00000000
 
 
+#define MODE_COMMAND    0
+#define MODE_DATA       1
+
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
 MODULE_DESCRIPTION("Module lcd");
+
+char buffer[20]; // a buffer to hold the data
+unsigned long count_buffer = 20; // number of bytes to copy
+unsigned long offset_buffer = 0; // offset in the user buffer
 
 // Structure to represent the layout of the memory-mapped I/O for the Raspberry Pi's GPIO
 struct gpio_s
@@ -136,55 +144,74 @@ gpio_write(int pin, bool val)
 void lcd_strobe(void)
 {   
     gpio_write(E, 1);
-    int i;
-    for (i = 0 ; i < nb; i++){
-    udelay(1);}
+    udelay(1);
     gpio_write(E, 0);
 }
 
 /* send 4bits to LCD : valable pour les commande et les data */
 
-void lcd_write4bits(int data)
-{
-    /* first 4 bits */
-    gpio_write(D7, data>>7);
-    gpio_write(D6, data>>6);
-    gpio_write(D5, data>>5);
-    gpio_write(D4, data>>4);
-    lcd_strobe();
+void lcd_write4bits(unsigned char data, int mode) {
+    // set the RS pin based on the mode (0 = command, 1 = data)
+    gpio_write(RS, mode);
 
-    /* second 4 bits */
-    gpio_write(D7, data>>3);
-    gpio_write(D6, data>>2);
-    gpio_write(D5, data>>1);
-    gpio_write(D4, data>>0);
+    // write the first 4 bits
+    gpio_write(D4, (data >> 4) & 0x1);
+    gpio_write(D5, (data >> 5) & 0x1);
+    gpio_write(D6, (data >> 6) & 0x1);
+    gpio_write(D7, (data >> 7) & 0x1);
+
+    // pulse the enable pin to latch the data
     lcd_strobe();
+    udelay(50);
+
+    // write the second 4 bits
+    gpio_write(D4, (data >> 0) & 0x1);
+    gpio_write(D5, (data >> 1) & 0x1);
+    gpio_write(D6, (data >> 2) & 0x1);
+    gpio_write(D7, (data >> 3) & 0x1);
+
+    // pulse the enable pin to latch the data
+    lcd_strobe();
+    udelay(50);
 }
 
 void lcd_command(int cmd)
 {
     gpio_write(RS, 0);
-    lcd_write4bits(cmd);
-    int i;
-    for (i = 0 ; i < nb; i++){
-    udelay(2000);}               // certaines commandes sont lentes 
+    lcd_write4bits(cmd, MODE_COMMAND);
+    udelay(2000);
 }
 
 void lcd_data(int character)
 {
     gpio_write(RS, 1);
-    lcd_write4bits(character);
-    int i;
-    for (i = 0 ; i < nb; i++){
-    udelay(1);}
+    lcd_write4bits(character, MODE_DATA);
+    udelay(1);
 }
 
-/* initialization : pour comprendre la séquence, il faut regarder le cours */
-// Q4: Expliquer le rôle des masques : LCD_FUNCTIONSET, LCD_FS_4BITMODE, etc.
 void lcd_init(void)
 {
     gpio_write(E, 0);
-    lcd_command(0b00110011);    /* initialization */
+
+    gpio_write(RS, 0);
+    gpio_write(D7, 0);
+    gpio_write(D6, 0);
+    gpio_write(D5, 1);
+    gpio_write(D4, 1);
+    gpio_write(E, 1);
+    udelay(5);
+    gpio_write(E, 0);
+    gpio_write(RS, 0);
+    gpio_write(D7, 0);
+    gpio_write(D6, 0);
+    gpio_write(D5, 1);
+    gpio_write(D4, 1);
+    gpio_write(E, 1);
+    udelay(1);
+    gpio_write(E, 0);
+    udelay(2000);
+    //lcd_command(0b00110011);    /* initialization */
+    
     lcd_command(0b00110010);    /* initialization */
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS);
     lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSOROFF);
@@ -207,6 +234,7 @@ void lcd_message(const char *txt)
     for (i = 0, l = 0; (l < 4) && (i < strlen(txt)); l++) {
         lcd_command(LCD_SETDDRAMADDR + a[l]);
         for (; (i < (l + 1) * len) && (i < strlen(txt)); i++) {
+            printk(KERN_DEBUG "%d", txt[i]);
             lcd_data(txt[i]);
         }
     }
@@ -223,17 +251,7 @@ open_lcd0_LA(struct inode *inode, struct file *file) {
     //Print a debug message indicating that the LCD0 has been initialized
     printk(KERN_DEBUG "LCD0 initialised!\n");
     
-    /* Setting up GPIOs to output */
-    gpio_fsel(RS, GPIO_FSEL_OUTPUT);
-    gpio_fsel(E,  GPIO_FSEL_OUTPUT);
-    gpio_fsel(D4, GPIO_FSEL_OUTPUT);
-    gpio_fsel(D5, GPIO_FSEL_OUTPUT);
-    gpio_fsel(D6, GPIO_FSEL_OUTPUT);
-    gpio_fsel(D7, GPIO_FSEL_OUTPUT);
-
-    /* initialization */
-    lcd_init();
-    lcd_clear();
+    
 
     //Print a debug message indicating that the LCD0 is ready to be written on
     printk(KERN_DEBUG "LCD0 can be write on!\n");
@@ -256,12 +274,16 @@ read_lcd0_LA(struct file *file, char *buf, size_t count, loff_t *ppos) {
 static ssize_t 
 write_lcd0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
     //Print a debug message indicating the value that is being written to the LCD0
-    printk(KERN_DEBUG "Writing on lcd0! Value input : %s\n", buf);
+    printk(KERN_DEBUG "Writing on lcd0!\n");
+
+    if (copy_from_user(buffer, buf + offset_buffer, count_buffer)) {
+        printk(KERN_DEBUG "Error : can't copy from userspace to karnelspace\n");
+    } else {
+        lcd_message(&buffer[0]);
+    }
+   
 
     
-    lcd_message(buf);
-
-
     //Return the count of bytes written, which is equal to the count parameter
     return count;
 }
@@ -289,6 +311,19 @@ static int __init mon_module_init(void)
     // Registering the character device driver
     major = register_chrdev(0, "lcd0_LA", &fops_lcd0_LA);  // 0 To let linux choose the major number
     printk(KERN_DEBUG "lcd0_LA connected!\n");
+
+    /* Setting up GPIOs to output */
+    gpio_fsel(RS, GPIO_FSEL_OUTPUT);
+    gpio_fsel(E,  GPIO_FSEL_OUTPUT);
+    gpio_fsel(D4, GPIO_FSEL_OUTPUT);
+    gpio_fsel(D5, GPIO_FSEL_OUTPUT);
+    gpio_fsel(D6, GPIO_FSEL_OUTPUT);
+    gpio_fsel(D7, GPIO_FSEL_OUTPUT);
+
+    /* initialization */
+    lcd_init();
+    lcd_clear();
+
     return 0;
 }
 

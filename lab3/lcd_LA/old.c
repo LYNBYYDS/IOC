@@ -12,6 +12,9 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+/*******************************************************************************
+ * GPIO Pins
+ ******************************************************************************/
 #define RS 7
 #define E  27
 #define D4 22
@@ -24,6 +27,72 @@
 
 #define RPI_BLOCK_SIZE  0xB4
 #define RPI_GPIO_BASE   0x20200000
+
+// Q1: A quoi sert le mot clé volatile
+struct gpio_s {
+    uint32_t gpfsel[7];
+    uint32_t gpset[3];
+    uint32_t gpclr[3];
+    uint32_t gplev[3];
+    uint32_t gpeds[3];
+    uint32_t gpren[3];
+    uint32_t gpfen[3];
+    uint32_t gphen[3];
+    uint32_t gplen[3];
+    uint32_t gparen[3];
+    uint32_t gpafen[3];
+    uint32_t gppud[1];
+    uint32_t gppudclk[3];
+    uint32_t test[1];
+};
+volatile struct gpio_s *gpio_regs;
+
+/*******************************************************************************
+ * GPIO Operations 
+ ******************************************************************************/
+
+// Q2: Expliquer la présence des drapeaux dans open() et mmap().
+int gpio_setup(void)
+{
+
+    int mmap_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if (mmap_fd < 0) {
+        return -1;
+    }
+    gpio_regs = mmap(NULL, RPI_BLOCK_SIZE,
+                     PROT_READ | PROT_WRITE, MAP_SHARED,
+                     mmap_fd,
+                     RPI_GPIO_BASE);
+    if (gpio_regs == MAP_FAILED) {
+        close(mmap_fd);
+        return -1;
+    }
+    return 0;
+}
+
+// Q3: pourquoi appeler munmap() ?
+void gpio_teardown(void)
+{
+    munmap((void *) gpio_regs, RPI_BLOCK_SIZE);
+}
+
+void gpio_config(int gpio, int value)
+{
+    int regnum = gpio / 10;
+    int offset = (gpio % 10) * 3;
+    gpio_regs->gpfsel[regnum] &= ~(0x7 << offset);
+    gpio_regs->gpfsel[regnum] |= ((value & 0x7) << offset);
+}
+
+void gpio_write(int gpio, int value)
+{
+    int regnum = gpio / 32;
+    int offset = gpio % 32;
+    if (value&1)
+        gpio_regs->gpset[regnum] = (0x1 << offset);
+    else
+        gpio_regs->gpclr[regnum] = (0x1 << offset);
+}
 
 /*******************************************************************************
  * LCD's Instructions ( source = doc )
@@ -69,69 +138,6 @@
 #define LCD_FS_5x10DOTS         0b00000100
 #define LCD_FS_5x8DOTS          0b00000000
 
-#define MODE_COMMAND    0
-#define MODE_DATA       1
-
-struct gpio_s {
-    uint32_t gpfsel[7];
-    uint32_t gpset[3];
-    uint32_t gpclr[3];
-    uint32_t gplev[3];
-    uint32_t gpeds[3];
-    uint32_t gpren[3];
-    uint32_t gpfen[3];
-    uint32_t gphen[3];
-    uint32_t gplen[3];
-    uint32_t gparen[3];
-    uint32_t gpafen[3];
-    uint32_t gppud[1];
-    uint32_t gppudclk[3];
-    uint32_t test[1];
-};
-volatile struct gpio_s *gpio_regs;
-
-int gpio_setup(void)
-{
-
-    int mmap_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if (mmap_fd < 0) {
-        return -1;
-    }
-    gpio_regs = mmap(NULL, RPI_BLOCK_SIZE,
-                     PROT_READ | PROT_WRITE, MAP_SHARED,
-                     mmap_fd,
-                     RPI_GPIO_BASE);
-    if (gpio_regs == MAP_FAILED) {
-        close(mmap_fd);
-        return -1;
-    }
-    return 0;
-}
-
-// Q3: pourquoi appeler munmap() ?
-void gpio_teardown(void)
-{
-    munmap((void *) gpio_regs, RPI_BLOCK_SIZE);
-}
-
-void gpio_config(int gpio, int value)
-{
-    int regnum = gpio / 10;
-    int offset = (gpio % 10) * 3;
-    gpio_regs->gpfsel[regnum] &= ~(0x7 << offset);
-    gpio_regs->gpfsel[regnum] |= ((value & 0x7) << offset);
-}
-
-void gpio_write(int gpio, int value)
-{
-    int regnum = gpio / 32;
-    int offset = gpio % 32;
-    if (value&1)
-        gpio_regs->gpset[regnum] = (0x1 << offset);
-    else
-        gpio_regs->gpclr[regnum] = (0x1 << offset);
-}
-
 /*******************************************************************************
  * LCD's Operations
  ******************************************************************************/
@@ -146,43 +152,34 @@ void lcd_strobe(void)
 
 /* send 4bits to LCD : valable pour les commande et les data */
 
-
-void lcd_write4bits(unsigned char data, int mode) {
-    // set the RS pin based on the mode (0 = command, 1 = data)
-    gpio_write(RS, mode);
-
-    // write the first 4 bits
-    gpio_write(D4, (data >> 4) & 0x1);
-    gpio_write(D5, (data >> 5) & 0x1);
-    gpio_write(D6, (data >> 6) & 0x1);
-    gpio_write(D7, (data >> 7) & 0x1);
-
-    // pulse the enable pin to latch the data
+void lcd_write4bits(int data)
+{
+    /* first 4 bits */
+    gpio_write(D7, data>>7);
+    gpio_write(D6, data>>6);
+    gpio_write(D5, data>>5);
+    gpio_write(D4, data>>4);
     lcd_strobe();
-    usleep(50);
 
-    // write the second 4 bits
-    gpio_write(D4, (data >> 0) & 0x1);
-    gpio_write(D5, (data >> 1) & 0x1);
-    gpio_write(D6, (data >> 2) & 0x1);
-    gpio_write(D7, (data >> 3) & 0x1);
-
-    // pulse the enable pin to latch the data
+    /* second 4 bits */
+    gpio_write(D7, data>>3);
+    gpio_write(D6, data>>2);
+    gpio_write(D5, data>>1);
+    gpio_write(D4, data>>0);
     lcd_strobe();
-    usleep(50);
 }
 
 void lcd_command(int cmd)
 {
     gpio_write(RS, 0);
-    lcd_write4bits(cmd, MODE_COMMAND);
-    usleep(2000);
+    lcd_write4bits(cmd);
+    usleep(2000);               // certaines commandes sont lentes 
 }
 
 void lcd_data(int character)
 {
     gpio_write(RS, 1);
-    lcd_write4bits(character, MODE_DATA);
+    lcd_write4bits(character);
     usleep(1);
 }
 
@@ -191,7 +188,6 @@ void lcd_data(int character)
 void lcd_init(void)
 {
     gpio_write(E, 0);
-    usleep(15000);
     lcd_command(0b00110011);    /* initialization */
     lcd_command(0b00110010);    /* initialization */
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS);
@@ -205,6 +201,7 @@ void lcd_clear(void)
     lcd_command(LCD_RETURNHOME);
 }
 
+// Q5: Expliquez comment fonctionne cette fonction 
 void lcd_message(const char *txt)
 {
     int a[] = { 0, 0x40, 0x14, 0x54 };
@@ -217,6 +214,54 @@ void lcd_message(const char *txt)
             lcd_data(txt[i]);
         }
     }
+}
+
+void lcd_set_cursor(const int x, const int y) {
+    int x_s, j, i;
+
+    lcd_command(LCD_RETURNHOME);
+
+    /* Deplacement jusqu'a la bonne ligne */
+    if (y == 1){
+        for ( j = 0; j < 40; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }else if (y == 2){
+        for ( j = 0; j < 20; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }else if (y == 3){
+        for ( j = 0; j < 60; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }
+
+    /* Deplacement jusqu'a la bonne colonne */
+    for (x_s = 0; x_s < x; ++x_s) {
+        lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+    }
+}
+
+/* Deuxieme version de la fonction qui utilise LCD_SETDDRAMADDR*/
+void lcd_set_cursor_V2(const int x, const int y) {
+
+    int a[] = { 0, 0x40, 0x14, 0x54 };
+
+    /* Deplacement jusqu'a la bonne ligne avec l'adresse contenu dans a et on ajoute le decalage sur la bonne colonne */
+    lcd_command(LCD_SETDDRAMADDR + a[y] + x);
+}
+
+void lcd_message_bis(const char *txt){
+
+    int len = 20;
+    int i, y;
+    for(y = 0; y < 4; y++){
+        lcd_set_cursor_V2(5, y);
+        for (i = 0; i < strlen(txt); i++) {
+            lcd_data(txt[i]);
+        }   
+    }
+
 }
 
 /*******************************************************************************
@@ -251,11 +296,8 @@ int main(int argc, char **argv)
     /* change the place of the mouse*/
 
     /* affichage */
-    lcd_message(argv[1]);
+    lcd_message_bis(argv[1]);
 
-    lcd_message(argv[1]);
-
-    lcd_message(argv[1]);
     /* Release the GPIO memory mapping */
     gpio_teardown();
     

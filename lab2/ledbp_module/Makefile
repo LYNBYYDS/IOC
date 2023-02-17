@@ -25,7 +25,9 @@ all : clean default main.x upload uploadsh
 default:;       make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) modules
 
 # Target to clean up built files
-clean:;         make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) clean
+clean:
+	make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) clean
+	rm *.x	
 
 # Target to upload the kernel modules to the Raspberry Pi
 upload:
