@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Define the name of the led0 and bp module
-module_lcd=lcd_LA
+module_lcd=lcd0_LA
 
 
 /sbin/insmod ./$module_lcd.ko || {                                     # Insert the lcd_LA module
