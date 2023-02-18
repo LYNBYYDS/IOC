@@ -234,29 +234,12 @@ void lcd_message(const char *txt)
 {
     int a[] = { 0, 0x40, 0x14, 0x54 };          // array of offset values for the LCD's DDRAM address
     int len = 20;                               // maximum number of characters per line
-    int i = 0, l = 0;
+    int i = 0, l = 2;
 
     // iterate over each line of the LCD and write the corresponding text
     for (; (l < 4) && (i < strlen(txt)); l++) {
         lcd_command(LCD_SETDDRAMADDR + a[l]);   // set the DDRAM address for the current line
         for (; (i < (l + 1) * len) && (i < strlen(txt)); i++) {
-            printk(KERN_DEBUG "%d", txt[i]);    // print the current character to the kernel log
-            lcd_data(txt[i]);                   // write the current character to the LCD
-        }
-    }
-}
-
-// Displays a string of characters on the LCD screen
-void lcd_message_eachline(const char *txt)
-{
-    int a[] = { 0, 0x40, 0x14, 0x54 };          // array of offset values for the LCD's DDRAM address
-    int len = 20;                               // maximum number of characters per line
-    int i, l;
-
-    // iterate over each line of the LCD and write the corresponding text
-    for (i = 0, l = 0; (l < 4) && (i < strlen(txt)); l++) {
-        lcd_command(LCD_SETDDRAMADDR + a[l]);   // set the DDRAM address for the current line
-        for (i = 0; (i < (l + 1) * len) && (i < strlen(txt)); i++) {
             printk(KERN_DEBUG "%d", txt[i]);    // print the current character to the kernel log
             lcd_data(txt[i]);                   // write the current character to the LCD
         }
@@ -269,26 +252,26 @@ static int major;
 
 // This function is called when the device file is opened with open system call
 static int 
-open_lcd0_LA(struct inode *inode, struct file *file) 
+open_lcd2_LA(struct inode *inode, struct file *file) 
 {
-    printk(KERN_DEBUG "LCD0 initialised!\n");               //Print a debug message indicating that the LCD0 has been initialized
-    printk(KERN_DEBUG "LCD0 can be write on!\n");           //Print a debug message indicating that the LCD0 is ready to be written on
+    printk(KERN_DEBUG "LCD2 initialised!\n");               //Print a debug message indicating that the LCD2 has been initialized
+    printk(KERN_DEBUG "LCD2 can be write on!\n");           //Print a debug message indicating that the LCD2 is ready to be written on
     return 0;                                               //Return 0 to indicate successful completion
 }
 
 //This function is called when the device file is read from with read system call
 static ssize_t 
-read_lcd0_LA(struct file *file, char *buf, size_t count, loff_t *ppos) 
+read_lcd2_LA(struct file *file, char *buf, size_t count, loff_t *ppos) 
 {
-    printk(KERN_DEBUG "ERROR: Can not read on lcd0!\n");    //Print a debug message indicating that reading from the LCD0 is not supported
+    printk(KERN_DEBUG "ERROR: Can not read on lcd2!\n");    //Print a debug message indicating that reading from the LCD2 is not supported
     return count;                                           //Return the count of bytes read, which is 0 in this case
 }
 
 //This function is called when the device file is written to with write system call
 static ssize_t 
-write_lcd0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
+write_lcd2_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
     
-    printk(KERN_DEBUG "Writing on lcd0!\n");                //Print a debug message indicating the value that is being written to the LCD0
+    printk(KERN_DEBUG "Writing on lcd2!\n");                //Print a debug message indicating the value that is being written to the LCD2
     // Copy the data from user space to kernel space, and write it to the LCD
     if (copy_from_user(buffer, buf + offset_buffer, count_buffer)) {
             // If there was an error copying the data, print a debug message
@@ -301,26 +284,26 @@ write_lcd0_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
 
 //This function is called when the device file is closed with close system call
 static int 
-release_lcd0_LA(struct inode *inode, struct file *file) 
+release_lcd2_LA(struct inode *inode, struct file *file) 
 {
-    printk(KERN_DEBUG "LCD file closed!\n");            //Print a debug message indicating that the LCD0 has stopped working
+    printk(KERN_DEBUG "LCD file closed!\n");            //Print a debug message indicating that the LCD2 has stopped working
     return 0;                                           //Return 0 to indicate successful completion
 }
 
-// Definition of file operations for LCD0 character device driver
-struct file_operations fops_lcd0_LA = {
-    .open       = open_lcd0_LA,                         // function to be called when the device is opened
-    .read       = read_lcd0_LA,                         // function to be called when the device is read
-    .write      = write_lcd0_LA,                        // function to be called when the device is written to
-    .release    = release_lcd0_LA                       // function to be called when the device is closed
+// Definition of file operations for LCD2 character device driver
+struct file_operations fops_lcd2_LA = {
+    .open       = open_lcd2_LA,                         // function to be called when the device is opened
+    .read       = read_lcd2_LA,                         // function to be called when the device is read
+    .write      = write_lcd2_LA,                        // function to be called when the device is written to
+    .release    = release_lcd2_LA                       // function to be called when the device is closed
 };
 
 // Initialization function for the module
 static int __init mon_module_init(void)
 {
     // Registering the character device driver
-    major = register_chrdev(0, "lcd0_LA", &fops_lcd0_LA);   // 0 To let linux choose the major number
-    printk(KERN_DEBUG "lcd0_LA connected!\n");              // Indicates the start of the module
+    major = register_chrdev(0, "lcd2_LA", &fops_lcd2_LA);   // 0 To let linux choose the major number
+    printk(KERN_DEBUG "lcd2_LA connected!\n");              // Indicates the start of the module
     lcd_init();                                             // Initialize an LCD (liquid crystal display) module
     lcd_clear();                                            // Clears the LCD screen and returns the cursor to the home position
     return 0;
@@ -330,8 +313,8 @@ static int __init mon_module_init(void)
 static void __exit mon_module_cleanup(void)
 {
     lcd_terminate();                                        // Set all GPIO in unput => safer
-    unregister_chrdev(major, "lcd0_LA");                    // Function to unload the driver
-    printk(KERN_DEBUG "lcd0_LA deconnected!\n");            // Indicates the end of the module
+    unregister_chrdev(major, "lcd2_LA");                    // Function to unload the driver
+    printk(KERN_DEBUG "lcd2_LA deconnected!\n");            // Indicates the end of the module
 }
 
 // Register the init and cleanup functions with the kernel
