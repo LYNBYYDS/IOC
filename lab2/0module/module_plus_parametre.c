@@ -5,7 +5,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
-MODULE_DESCRIPTION("Module");
+MODULE_DESCRIPTION("MODULE_nparas");
 
 static int leds[NBMAX_LED];
 static int nbled;
@@ -14,10 +14,11 @@ MODULE_PARM_DESC(LEDS, "tableau des numéros de port LED");
 
 static int __init mon_module_init(void)
 {
-    int i;
-    printk(KERN_DEBUG "Hello World, this is cart 23 controled by li_authier !\n");
-    for (i=0; i < nbled; i++)
-       printk(KERN_DEBUG "LED %d = %d\n", i, leds[i]);
+   int i;
+   printk(KERN_DEBUG "Hello World, this is cart 23 controled by li_authier !\n");
+   for (i=0; i < nbled; i++)
+      printk(KERN_DEBUG "LED %d = %d\n", i, leds[i]);
+   return 0;
 }
 
 static void __exit mon_module_cleanup(void)

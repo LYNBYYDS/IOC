@@ -1,9 +1,9 @@
 CARD_NUMB       = 23
 ROUTER          = peri
 LOGIN           = li_authier
-LAB             = lab2
+LAB             = lab2/led_LA
 
-MODULE          = module
+MODULE          = led_LA
 
 CROSSDIR        = /users/enseig/franck/IOC
 KERNELDIR       = /dsk/l1/misc/linux-rpi-3.18.y

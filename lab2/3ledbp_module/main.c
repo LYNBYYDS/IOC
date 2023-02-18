@@ -9,6 +9,11 @@
 #define PERIOD_3HZ   333
 #define PERIOD_50HZ  20
 
+// Define LED and button state constants
+#define LED_ON  '1'
+#define LED_OFF '0'
+#define BUTTON_PRESSED '0'
+
 // Function to delay for a specified amount of milliseconds
 void delay(unsigned int milisec) {
     struct timespec ts, dummy;
@@ -19,9 +24,9 @@ void delay(unsigned int milisec) {
 
 int main() {
     // Declare variables to hold the state of the LED and button
-    char led = '1';
-    char led_inv = '0';
-    char bp;
+    char led_state = LED_ON;
+    char led_inv_state = LED_OFF;
+    char button_state;
    
     // Open the device files for the LED and button
     int fdled0 = open("/dev/led0_LA", O_WRONLY);
@@ -31,33 +36,43 @@ int main() {
     // Check if the files were successfully opened
     if (fdled0 < 0) {
         fprintf(stderr, "Error: Can not open the driver for LED0!\n");
-        exit(1);
+        return 0;
+    }
+    if (fdled1 < 0) {
+        fprintf(stderr, "Error: Can not open the driver for LED1!\n");
+        return 0;
     }
     if (fdbp < 0) {
-        fprintf(stderr, "Error: Can not open the driver for button!\n");
-        exit(1);
+        fprintf(stderr, "Error: Can not o   pen the driver for button!\n");
+        return 0;
     }
-   
+
     // Loop indefinitely to toggle the LED and read the state of the button
     while (1) {
         // Read the state of the button 
-        //read(fdbp, &bp, 1);
-         bp = (bp == '0') ? '1' : '0';
+        read(fdbp, &button_state, 1);
+        printf("%c\n", button_state);
 
         // If the button is pressed, turn the LED off, otherwise turn it on
-        if (bp == '0') {
-            led = '0';
+        if (button_state == BUTTON_PRESSED) {
+            led_state = LED_OFF;
         } else {
-            led = '1';
+            led_state = LED_ON;
         }
-        led_inv = (led == '0') ? '1' : '0';
+        led_inv_state = (led_state == LED_OFF) ? LED_ON : LED_OFF;
       
         // Write the LED state to the LED device file
-        write(fdled0, &led, 1);
-        write(fdled1, &led_inv, 1);
+        if (write(fdled0, &led_state, 1) < 0) {
+            fprintf(stderr, "Error: Failed to write to LED0 device file!\n");
+            return 0;
+        }
+        if (write(fdled1, &led_inv_state, 1) < 0) {
+            fprintf(stderr, "Error: Failed to write to LED1 device file!\n");
+            return 0;
+        }
 
         // Wait for 20 milliseconds
-        delay(PERIOD_2HZ);
+        delay(PERIOD_50HZ);
     }
 
     return 0;

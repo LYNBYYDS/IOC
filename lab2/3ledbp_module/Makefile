@@ -2,7 +2,7 @@
 CARD_NUMB       = 23
 ROUTER          = peri
 LOGIN           = li_authier
-LAB             = lab2
+LAB             = lab2/ledbp_module
 
 # Define the names of the kernel modules
 MODULE_LED0		= led0_LA
@@ -19,7 +19,7 @@ obj-m           += $(MODULE_LED0).o
 obj-m           += $(MODULE_LED1).o
 obj-m           += $(MODULE_bp).o
 
-all : clean default main.x upload uploadsh
+all : default main.x upload uploadsh
 
 # Default target to build the modules
 default:;       make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) modules
