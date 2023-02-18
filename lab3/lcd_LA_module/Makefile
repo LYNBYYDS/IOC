@@ -10,6 +10,8 @@ MODULE_LCD1		= lcd1_LA
 MODULE_LCD2		= lcd2_LA
 MODULE_LCD3		= lcd3_LA
 
+MODULE_LCD		= lcd_LA
+
 # Define paths for the cross compiler and kernel source
 CROSSDIR        = /users/enseig/franck/IOC
 KERNELDIR       = /dsk/l1/misc/linux-rpi-3.18.y
@@ -20,8 +22,9 @@ obj-m           += $(MODULE_LCD0).o
 obj-m           += $(MODULE_LCD1).o
 obj-m           += $(MODULE_LCD2).o
 obj-m           += $(MODULE_LCD3).o
+obj-m           += $(MODULE_LCD).o
 
-all : clean default main.x upload uploadsh
+all : clean default main.x main_v2.x upload uploadsh
 
 # Default target to build the modules
 default:;       make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) modules
@@ -37,7 +40,9 @@ upload:
 	scp -P622$(CARD_NUMB) $(MODULE_LCD1).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) $(MODULE_LCD2).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) $(MODULE_LCD3).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
+	scp -P622$(CARD_NUMB) $(MODULE_LCD).ko pi@$(ROUTER):$(LOGIN)/$(LAB)
 	scp -P622$(CARD_NUMB) main.x pi@$(ROUTER):$(LOGIN)/$(LAB)
+	scp -P622$(CARD_NUMB) main_v2.x pi@$(ROUTER):$(LOGIN)/$(LAB)
 
 # Target to upload shell scripts to the Raspberry Pi
 uploadsh:
