@@ -4,6 +4,7 @@
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
+#include <linux/ioctl.h>
 
 #include <asm/io.h>
 #include <asm/delay.h>
@@ -74,17 +75,15 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
 MODULE_DESCRIPTION("Module lcd");
 
-
-/*
-#define IOC_MAGIC 't'
-#define LCDIOCT_CLEAR _IO(IOC_MAGIC, 20)
-#define LCDIOCT_SETXY _IOW(IOC_MAGIC, 21, struct cord_xy)
-*/
-
 struct coord_xy {
     int coordY;
     int coordX;
 };
+
+#define IOC_MAGIC 't'
+#define LCDIOCT_CLEAR _IO(IOC_MAGIC, 20)
+#define LCDIOCT_SETXY _IOW(IOC_MAGIC, 21, struct coord_xy)
+
 
 struct coord_xy cursor = {0, 0};
 struct coord_xy cursor_pre;
@@ -330,7 +329,24 @@ void lcd_message(const char *txt, const long count)
                 lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
                 toprint = 0;                                                            // char no need print
             }
-           
+            //https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797 ESC
+            else if(i + 2 < count && txt[i] == 'E' && txt[i+1] == 'S' && txt[i+2] == 'C'){
+                i = i + 3;
+                // Cursor Controls
+                if(i + 1 < count && txt[i] == '[' && txt[i+1] == 'H'){                                          // ESC[H moves cursor to home position
+                    i = i + 2;
+                    cursor.coordX = 0;
+                    cursor.coordY = 0;
+                    lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
+                }else if(i + 1 < count && txt[i] == '[' && txt[i+1] == 'H'){                                          // ESC[H moves cursor to home position
+                    i = i + 2;
+                    cursor.coordX = 0;
+                    cursor.coordY = 0;
+                    lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
+                }else if (i + 8 < count && txt[i] == '[' && txt[i+1] == '{' && int(txt[i+2]) < 2 && int(txt[i+2]) > 0 && txt[i+3] == '}' && txt[i+4] == ';' && txt[i+5] = '{' && int(txt[i+6]) < 10 && int(txt[i+6]) > 0 && txt[i+7] == '}' && (txt[i+8] == 'H' || txt[i+8] == 'f'))
+                toprint = 0;                                                            // char no need print
+            }
+
         #endif
         
         
@@ -395,45 +411,62 @@ write_lcd_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
     return count;                                           //Return the count of bytes written, which is equal to the count parameter
 }
 
-//This function is called when the device file is closed with close system call
+// This function is called when the device file is closed with close system call
 static int 
 release_lcd_LA(struct inode *inode, struct file *file) 
 {
     printk(KERN_DEBUG "LCD file closed!\n");                //Print a debug message indicating that the LCD has stopped working
     return 0;                                               //Return 0 to indicate successful completion
 }
-/*
-static long 
-ioctl_lcd(struct file *file, unsigned int cmd, unsigned long arg)
-{
-    printk(KERN_DEBUG "Ioctl_lcd ! \n");
-    struct cord_xy cord;
 
-    if(_IOC_TYPE(cmd) != IOC_MAGIC) // Check the magic number of the device
+// This function handles the ioctl calls for an LCD device driver
+
+static long 
+ioctl_lcd_LA(struct file *file, unsigned int cmd, unsigned long arg)
+{
+    struct coord_xy coord;
+    printk(KERN_DEBUG "Ioctl_lcd ! \n");
+
+    // Check the magic number of the device
+    if(_IOC_TYPE(cmd) != IOC_MAGIC)
         return -EINVAL;
     
+    // Handle each ioctl command
     switch(cmd){
+        // Clear the LCD display and reset file position to 0
         case LCDIOCT_CLEAR:
-            file->f_pos = 0;
-            lcd_clear();
+            file->f_pos = 0; // Reset file position
+            lcd_clear();     // Clear LCD display
             break;
+
+        // Set the cursor position on the LCD display
         case LCDIOCT_SETXY:
-            if(copy_from_user(&cord, (void*)arg, _IOC_SIZE(cmd)) != 0)
+            // Copy the X and Y coordinates from user space
+            if(copy_from_user(&coord, (void*)arg, _IOC_SIZE(cmd)) != 0)
                 return -EINVAL;
-            coordX = cord.line;
-            coordY = cord.row;
+            // Update the cursor position and set it on the LCD display
+            cursor.coordX = coord.coordX;
+            cursor.coordY = coord.coordY;
+            lcd_set_cursor(cursor.coordX, cursor.coordY);
             break;
-        default: return -EINVAL;
+
+        // If the ioctl command is not recognized, return an error
+        default: 
+            return -EINVAL;
     }
+
+    // Return 0 to indicate success
     return 0;
 }
-*/
+
+
 // Definition of file operations for LCD character device driver
 struct file_operations fops_lcd_LA = {
-    .open       = open_lcd_LA,                         // function to be called when the device is opened
-    .read       = read_lcd_LA,                         // function to be called when the device is read
-    .write      = write_lcd_LA,                        // function to be called when the device is written to
-    .release    = release_lcd_LA                       // function to be called when the device is closed
+    .open           = open_lcd_LA,                          // function to be called when the device is opened
+    .read           = read_lcd_LA,                          // function to be called when the device is read
+    .write          = write_lcd_LA,                         // function to be called when the device is written to
+    .unlocked_ioctl = ioctl_lcd_LA,                         // Pointer to function to handle ioctl calls        
+    .release        = release_lcd_LA                        // function to be called when the device is closed
 };
 
 // Initialization function for the module
