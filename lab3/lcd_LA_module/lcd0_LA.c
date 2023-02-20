@@ -246,23 +246,6 @@ void lcd_message(const char *txt)
     }
 }
 
-// Displays a string of characters on the LCD screen
-void lcd_message_eachline(const char *txt)
-{
-    int a[] = { 0, 0x40, 0x14, 0x54 };          // array of offset values for the LCD's DDRAM address
-    int len = 20;                               // maximum number of characters per line
-    int i, l;
-
-    // iterate over each line of the LCD and write the corresponding text
-    for (i = 0, l = 0; (l < 4) && (i < strlen(txt)); l++) {
-        lcd_command(LCD_SETDDRAMADDR + a[l]);   // set the DDRAM address for the current line
-        for (i = 0; (i < (l + 1) * len) && (i < strlen(txt)); i++) {
-            printk(KERN_DEBUG "%d", txt[i]);    // print the current character to the kernel log
-            lcd_data(txt[i]);                   // write the current character to the LCD
-        }
-    }
-}
-
 // variable to store the major number of the device
 static int major;
 

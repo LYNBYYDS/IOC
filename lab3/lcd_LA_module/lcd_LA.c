@@ -9,6 +9,9 @@
 #include <asm/delay.h>
 #include <mach/platform.h>
 
+#define ASCII_ON 1
+
+
 // Define the GPIO pins used to connect to the LCD
 #define GPIO_BASE_ADR           0x20200000
 
@@ -71,8 +74,20 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("li_authier, 2023");
 MODULE_DESCRIPTION("Module lcd");
 
-int coordX = 0;
-int coordY = 0;
+
+/*
+#define IOC_MAGIC 't'
+#define LCDIOCT_CLEAR _IO(IOC_MAGIC, 20)
+#define LCDIOCT_SETXY _IOW(IOC_MAGIC, 21, struct cord_xy)
+*/
+
+struct coord_xy {
+    int coordY;
+    int coordX;
+};
+
+struct coord_xy cursor = {0, 0};
+struct coord_xy cursor_pre;
 
 // Structure to represent the layout of the memory-mapped I/O for the Raspberry Pi's GPIO
 struct gpio_s
@@ -225,10 +240,12 @@ void lcd_clear(void)
 {
     lcd_command(LCD_CLEARDISPLAY);
     lcd_command(LCD_RETURNHOME);
+    cursor.coordX = 0;
+    cursor.coordY = 0;
 }
 
 void lcd_set_cursor(const int x, const int y) {
-    int x_s, j, i;
+    int x_s, j;
 
     lcd_command(LCD_RETURNHOME);
 
@@ -251,44 +268,89 @@ void lcd_set_cursor(const int x, const int y) {
     for (x_s = 0; x_s < x; ++x_s) {
         lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
     }
+
+    cursor.coordX = x;
+    cursor.coordY = y;
 }
 
-// Displays a string of characters on the LCD screen
 void lcd_message(const char *txt, const long count)
 {
-    int a[] = { 0, 0x40, 0x14, 0x54 };          // array of offset values for the LCD's DDRAM address
-    int i, l = 0, j, k;
-
+    int i;
+    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSORON | LCD_DC_BLINKON);
     // iterate over each line of the LCD and write the corresponding text
     for (i = 0; i < count; ) {
-        lcd_command(LCD_SETDDRAMADDR + a[l]);   // set the DDRAM address for the current line
-        for(j = 0; j < 19; j++){
-            printk(KERN_DEBUG "%d", txt[i]);    // print the current character to the kernel log
-            lcd_data(txt[i]);                   // write the current character to the LCD
-            i++;
-            for(k = 0; k < 400; k++){
-                udelay(2000);
+        int j, k, toprint = 1;
+
+        printk(KERN_DEBUG "%d", txt[i]);    // print the current character to the kernel log
+        
+        // if we test ASCII control char
+        #if ASCII_ON == 1
+            if (i + 2 < count && txt[i] == 'N' && txt[i+1] == 'U' && txt[i+2] == 'L' ) {                        // NUL
+                i = count;                                                              // pass all the rest char
+                toprint = 0;                                                            // char no need print
+            }else if (i + 1 < count && txt[i] == 'H' && txt[i+1] == 'T') {                                      // HT
+                cursor_pre.coordX = cursor.coordX;
+                cursor_pre.coordY = cursor.coordY;
+                i = i + 2;                                                              // we skip the HT
+                cursor.coordX = cursor.coordX%4 == 0 ? cursor.coordX + 4 : ((cursor.coordX / 4) + 1) * 4; // pass to next tab spot
+                if (cursor.coordX >= 20) {                                              // if it pass the capacity of the line 
+                    cursor.coordY = cursor.coordY < 3 ? cursor.coordY + 1 : 0;          // pass coordY to next
+                    cursor.coordX = 0;                                                  // set to the first bit
+                }
+                lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to next line 
+                toprint = 0;                                                            // char no need print
+            }else if (i + 1 < count && txt[i] == 'B' && txt[i+1] == 'S') {                                      // BS
+                i = i + 2;                                                              // we skip the BS
+                if(i - 3 > 0 && ((txt[i-4] == 'H' && txt[i-3] == 'T') || (txt[i-4] == 'L' && txt[i-3] == 'F'))){
+                    printk(KERN_DEBUG "i caught u \n");
+                    cursor.coordX = cursor_pre.coordX;
+                    cursor.coordY = cursor_pre.coordY;
+                    lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
+                }else {
+                    cursor.coordX = cursor.coordX != 0 ? cursor.coordX - 1 : 19;
+                    if (cursor.coordX == 19) {                                          // if we go back to the last line                                                                    
+                        cursor.coordY = cursor.coordY != 0 ? cursor.coordY - 1 : 3;     // pass coordY to last line
+                    }
+                    lcd_set_cursor(cursor.coordX, cursor.coordY);                       // set the cursor to last plce
+                    lcd_data(' ');                                                      // erase the data
+                    lcd_set_cursor(cursor.coordX, cursor.coordY);                       // set the cursor to right place
+                }
+                toprint = 0;                                                            // char no need print
+            }else if (i + 1 < count && txt[i] == 'L' && txt[i+1] == 'F') {                                      // LF
+                cursor_pre.coordX = cursor.coordX;
+                cursor_pre.coordY = cursor.coordY;
+                i = i + 2;                                                              // we skip the LF
+                cursor.coordX = 0;
+                cursor.coordY = cursor.coordY < 3 ? cursor.coordY + 1 : 0;              // pass coordY to next
+                lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
+                toprint = 0;                                                            // char no need print
+            }else if (i + 1 < count && txt[i] == 'C' && txt[i+1] == 'R') {                                      // CR
+                i = i + 2;                                                              // we skip the LF
+                cursor.coordX = 0;
+                lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
+                toprint = 0;                                                            // char no need print
+            }
+           
+        #endif
+        
+        
+        // if we are not at the end of the input and char need to print
+        if (i < count && toprint == 1){
+            lcd_data(txt[i]);                                                       // write the current character to the LCD
+            i++;                                                                    // pass to next bit of the char
+            cursor.coordX = cursor.coordX < 19 ? cursor.coordX + 1 : 0;             // pass coordX to next 
+            
+            // if pass to next line
+            if (cursor.coordX == 0){                                                
+                for(k = 0; k < 1000; k++){                                          // Wait for 2 s when finish one line
+                    udelay(2000);
+                }
+                cursor.coordY = cursor.coordY < 3 ? cursor.coordY + 1 : 0;          // pass coordY to next
+                lcd_set_cursor(cursor.coordX, cursor.coordY);                       // set the cursor to next line
             }
         }
-        l = l < 3 ? l + 1 : 0;
-    }
-}
 
-void lcd_message_on(const char *txt, const long count)
-{
-    int i, k;
-
-    // iterate over each line of the LCD and write the corresponding text
-    for (i = 0; i < count; ) {
-        printk(KERN_DEBUG "%d", txt[i]);    // print the current character to the kernel log
-        lcd_data(txt[i]);                   // write the current character to the LCD
-        i++;
-        coordX = coordX < 19 ? coordX + 1 : 0;
-            if (coordX == 0){
-                coordY = coordY < 3 ? coordY + 1 : 0;
-                lcd_set_cursor(coordX, coordY);
-            }
-        for(k = 0; k < 100; k++){
+        for(j = 0; j < 100; j++){
             udelay(2000);
         }
     }
@@ -318,18 +380,17 @@ read_lcd_LA(struct file *file, char *buf, size_t count, loff_t *ppos)
 //This function is called when the device file is written to with write system call
 static ssize_t 
 write_lcd_LA(struct file *file, const char *buf, size_t count, loff_t *ppos) {
-    
-    printk(KERN_DEBUG "Writing on lcd!\n");                //Print a debug message indicating the value that is being written to the LCD
-    // Copy the data from user space to kernel space, and write it to the LCD
-    // Buffer to stock data copy from user space
     char buffer[count];                                     // a buffer to hold the data
     unsigned long count_buffer = count;                     // number of bytes to copy
     unsigned long offset_buffer = 0;                        // offset in the user buffer
+    printk(KERN_DEBUG "Writing on lcd!\n");                //Print a debug message indicating the value that is being written to the LCD
+    // Copy the data from user space to kernel space, and write it to the LCD
+    // Buffer to stock data copy from user space
     if (copy_from_user(buffer, buf + offset_buffer, count_buffer)) {
             // If there was an error copying the data, print a debug message
             printk(KERN_DEBUG "Error : can't copy from userspace to karnelspace\n");
         } else {
-            lcd_message_on(buffer, count_buffer);                            // Otherwise, write the data to the LCD
+            lcd_message(buffer, count_buffer);                            // Otherwise, write the data to the LCD
     }
     return count;                                           //Return the count of bytes written, which is equal to the count parameter
 }
@@ -341,7 +402,32 @@ release_lcd_LA(struct inode *inode, struct file *file)
     printk(KERN_DEBUG "LCD file closed!\n");                //Print a debug message indicating that the LCD has stopped working
     return 0;                                               //Return 0 to indicate successful completion
 }
+/*
+static long 
+ioctl_lcd(struct file *file, unsigned int cmd, unsigned long arg)
+{
+    printk(KERN_DEBUG "Ioctl_lcd ! \n");
+    struct cord_xy cord;
 
+    if(_IOC_TYPE(cmd) != IOC_MAGIC) // Check the magic number of the device
+        return -EINVAL;
+    
+    switch(cmd){
+        case LCDIOCT_CLEAR:
+            file->f_pos = 0;
+            lcd_clear();
+            break;
+        case LCDIOCT_SETXY:
+            if(copy_from_user(&cord, (void*)arg, _IOC_SIZE(cmd)) != 0)
+                return -EINVAL;
+            coordX = cord.line;
+            coordY = cord.row;
+            break;
+        default: return -EINVAL;
+    }
+    return 0;
+}
+*/
 // Definition of file operations for LCD character device driver
 struct file_operations fops_lcd_LA = {
     .open       = open_lcd_LA,                         // function to be called when the device is opened
