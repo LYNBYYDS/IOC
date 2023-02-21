@@ -26,6 +26,22 @@ obj-m           += $(MODULE_LCD).o
 
 all : clean default main.x main_v2.x upload uploadsh
 
+# Define help message for Makefile
+help:
+	@echo ""
+	@echo "	make [option] :"	
+	@echo ""
+	@echo "		all         clean all and recompile"
+	@echo ""
+	@echo ""
+	@echo "		clean       clean all except sources"
+	@echo ""
+	@echo "		upload        transfer all executable files to card $(RPI) in directory $(NAME)"
+	@echo ""
+	@echo "		uploadsh        transfer all script files to card $(RPI) in directory $(NAME)"
+	@echo ""
+
+
 # Default target to build the modules
 default:;       make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) modules
 
