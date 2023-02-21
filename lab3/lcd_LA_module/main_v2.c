@@ -18,9 +18,13 @@ struct coord_xy {
 
 int main() {
     char text[] = "j'en connais un qui a pas fini son TP de Multi il a le seum!          ";
-    char text_test[] = "NAASDHTBSavfBS32LFGGNULLOK?   ";
-    size_t nbbit_text = strlen(text);
+    char text_test[] = "Hello\nMarc";
+    char text_test1[] = "LF";
+    char text_test2[] = "Marc";
+    size_t nb_text = strlen(text);
     size_t nb_text_test = strlen(text_test);
+    size_t nb_text_test1 = strlen(text_test1);
+    size_t nb_text_test2 = strlen(text_test2);
     struct coord_xy pos;
     pos.coordY = 2;
     pos.coordX = 5;
@@ -35,9 +39,13 @@ int main() {
         fprintf(stderr, "Error: Can not open the driver for LCD!\n");
         exit(1);
     }
+    while(1)
+        write(fdlcd, &text, nb_text);
 
-    write(fdlcd, &text_test, nb_text_test);
+    //write(fdlcd, &text_test1, nb_text_test1);
 
+    //write(fdlcd, &text_test2, nb_text_test2);
+/*
      // Send an ioctl command to clear the LCD display
     if (ioctl(fdlcd, LCDIOCT_CLEAR) < 0) {
         printf("Failed to send ioctl command: LCDIOCT_CLEAR\n");
@@ -50,7 +58,7 @@ int main() {
         printf("Failed to send ioctl command: LCDIOCT_SETXY\n");
         exit(1);
     }
-
+*/
     // Close the device file
     close(fdlcd);
 

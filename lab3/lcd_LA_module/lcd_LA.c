@@ -221,6 +221,7 @@ void lcd_init(void)
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS); // Function set: 4-bit interface, 2-line display, 5x8 dot character font
     lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSOROFF);          // Display control: display on, cursor off, blink off
     lcd_command(LCD_ENTRYMODESET | LCD_EM_RIGHT | LCD_EM_DISPLAYNOSHIFT);           // Entry mode set: increment mode, no shift
+    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSORON | LCD_DC_BLINKON);
 }
 
 void lcd_terminate(void)
@@ -275,7 +276,7 @@ void lcd_set_cursor(const int x, const int y) {
 void lcd_message(const char *txt, const long count)
 {
     int i;
-    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSORON | LCD_DC_BLINKON);
+    
     // iterate over each line of the LCD and write the corresponding text
     for (i = 0; i < count; ) {
         int j, k, toprint = 1;
@@ -284,13 +285,13 @@ void lcd_message(const char *txt, const long count)
         
         // if we test ASCII control char
         #if ASCII_ON == 1
-            if (i + 2 < count && txt[i] == 'N' && txt[i+1] == 'U' && txt[i+2] == 'L' ) {                        // NUL
+            if (txt[i] == '\0') {                                                       // NUL
                 i = count;                                                              // pass all the rest char
                 toprint = 0;                                                            // char no need print
-            }else if (i + 1 < count && txt[i] == 'H' && txt[i+1] == 'T') {                                      // HT
+            }else if (txt[i] == '\t') {                                                 // HT
                 cursor_pre.coordX = cursor.coordX;
                 cursor_pre.coordY = cursor.coordY;
-                i = i + 2;                                                              // we skip the HT
+                i++;                                                                    // we skip the HT
                 cursor.coordX = cursor.coordX%4 == 0 ? cursor.coordX + 4 : ((cursor.coordX / 4) + 1) * 4; // pass to next tab spot
                 if (cursor.coordX >= 20) {                                              // if it pass the capacity of the line 
                     cursor.coordY = cursor.coordY < 3 ? cursor.coordY + 1 : 0;          // pass coordY to next
@@ -298,10 +299,9 @@ void lcd_message(const char *txt, const long count)
                 }
                 lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to next line 
                 toprint = 0;                                                            // char no need print
-            }else if (i + 1 < count && txt[i] == 'B' && txt[i+1] == 'S') {                                      // BS
-                i = i + 2;                                                              // we skip the BS
-                if(i - 3 > 0 && ((txt[i-4] == 'H' && txt[i-3] == 'T') || (txt[i-4] == 'L' && txt[i-3] == 'F'))){
-                    printk(KERN_DEBUG "i caught u \n");
+            }else if (txt[i] == '\b') {                                                 // BS
+                i++;                                                              // we skip the BS
+                if(i > 0 && (txt[i-1] == '\t' || txt[i-1] == '\n' )){
                     cursor.coordX = cursor_pre.coordX;
                     cursor.coordY = cursor_pre.coordY;
                     lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
@@ -315,21 +315,22 @@ void lcd_message(const char *txt, const long count)
                     lcd_set_cursor(cursor.coordX, cursor.coordY);                       // set the cursor to right place
                 }
                 toprint = 0;                                                            // char no need print
-            }else if (i + 1 < count && txt[i] == 'L' && txt[i+1] == 'F') {                                      // LF
+            }else if (txt[i] == '\n') {                                      // LF
                 cursor_pre.coordX = cursor.coordX;
                 cursor_pre.coordY = cursor.coordY;
-                i = i + 2;                                                              // we skip the LF
+                i++;                                                              // we skip the LF
                 cursor.coordX = 0;
                 cursor.coordY = cursor.coordY < 3 ? cursor.coordY + 1 : 0;              // pass coordY to next
                 lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
                 toprint = 0;                                                            // char no need print
-            }else if (i + 1 < count && txt[i] == 'C' && txt[i+1] == 'R') {                                      // CR
-                i = i + 2;                                                              // we skip the LF
+            }else if (txt[i] == '\r') {                                      // CR
+                i++;                                                              // we skip the LF
                 cursor.coordX = 0;
                 lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
                 toprint = 0;                                                            // char no need print
             }
             //https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797 ESC
+            /*
             else if(i + 2 < count && txt[i] == 'E' && txt[i+1] == 'S' && txt[i+2] == 'C'){
                 i = i + 3;
                 // Cursor Controls
@@ -345,7 +346,7 @@ void lcd_message(const char *txt, const long count)
                     lcd_set_cursor(cursor.coordX, cursor.coordY);                           // set the cursor to right place
                 }else if (i + 8 < count && txt[i] == '[' && txt[i+1] == '{' && int(txt[i+2]) < 2 && int(txt[i+2]) > 0 && txt[i+3] == '}' && txt[i+4] == ';' && txt[i+5] = '{' && int(txt[i+6]) < 10 && int(txt[i+6]) > 0 && txt[i+7] == '}' && (txt[i+8] == 'H' || txt[i+8] == 'f'))
                 toprint = 0;                                                            // char no need print
-            }
+            }*/
 
         #endif
         
