@@ -1,4 +1,6 @@
-// Driver for LCd HD44780 ( 20x4 )
+/*******************************************************************************
+ * lcdr_user.c - Driver pour LCd HD44780 ( 20x4 )
+ ******************************************************************************/
 
 #include <linux/module.h>
 #include <linux/init.h>
@@ -10,18 +12,18 @@
 #include <asm/delay.h>
 #include <mach/platform.h>
 
+// Active the control caractere ASCII or not
 #define ASCII_ON 1
-
 
 // Define the GPIO pins used to connect to the LCD
 #define GPIO_BASE_ADR           0x20200000
 
-#define GPIO_RS                      7
-#define GPIO_E                       27
-#define GPIO_D4                      22
-#define GPIO_D5                      23
-#define GPIO_D6                      24
-#define GPIO_D7                      25
+#define GPIO_RS                 7
+#define GPIO_E                  27
+#define GPIO_D4                 22
+#define GPIO_D5                 23
+#define GPIO_D6                 24
+#define GPIO_D7                 25
 
 #define GPIO_FSEL_INPUT         0
 #define GPIO_FSEL_OUTPUT        1
@@ -106,9 +108,9 @@ struct gpio_s
     uint32_t gppudclk[3];           // Pin pull-up/down clock register
     uint32_t test[1];               // Test register
 }
+
 // Pointer to the base address of the GPIO I/O
 volatile *gpio_regs = (struct gpio_s *)__io_address(GPIO_BASE_ADR);
-
 
 // Function to configure the function of a specific GPIO pin
 static void 
@@ -187,7 +189,8 @@ void lcd_data(int character)
 
 // Initialize an LCD (liquid crystal display) module
 void lcd_init(void)
-{
+{   
+    int i;
     // Set all LCD pins to outputs
     gpio_fsel(GPIO_RS, GPIO_FSEL_OUTPUT);
     gpio_fsel(GPIO_E,  GPIO_FSEL_OUTPUT);
@@ -205,7 +208,9 @@ void lcd_init(void)
     gpio_write(GPIO_D5, 1);
     gpio_write(GPIO_D4, 1);
     gpio_write(GPIO_E, 1);
-    udelay(5);
+    for(i = 0; i < 50; i++){
+        udelay(100);                   // Wait for more than 4.1 ms
+    }
     gpio_write(GPIO_E, 0);
     gpio_write(GPIO_RS, 0);
     gpio_write(GPIO_D7, 0);
@@ -215,7 +220,7 @@ void lcd_init(void)
     gpio_write(GPIO_E, 1);
     udelay(1);
     gpio_write(GPIO_E, 0);
-    udelay(2000);
+    udelay(200);                    // Wait for more than 100 us
     
     lcd_command(0b00110010); 
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS); // Function set: 4-bit interface, 2-line display, 5x8 dot character font

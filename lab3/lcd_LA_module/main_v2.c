@@ -42,9 +42,6 @@ int main() {
     while(1)
         write(fdlcd, &text, nb_text);
 
-    //write(fdlcd, &text_test1, nb_text_test1);
-
-    //write(fdlcd, &text_test2, nb_text_test2);
 /*
      // Send an ioctl command to clear the LCD display
     if (ioctl(fdlcd, LCDIOCT_CLEAR) < 0) {

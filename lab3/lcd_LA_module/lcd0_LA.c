@@ -176,6 +176,7 @@ void lcd_data(int character)
 // Initialize an LCD (liquid crystal display) module
 void lcd_init(void)
 {
+    int i;
     // Set all LCD pins to outputs
     gpio_fsel(GPIO_RS, GPIO_FSEL_OUTPUT);
     gpio_fsel(GPIO_E,  GPIO_FSEL_OUTPUT);
@@ -193,7 +194,9 @@ void lcd_init(void)
     gpio_write(GPIO_D5, 1);
     gpio_write(GPIO_D4, 1);
     gpio_write(GPIO_E, 1);
-    udelay(5);
+    for(i = 0; i < 50; i++){
+        udelay(100);                   // Wait for more than 4.1 ms
+    }
     gpio_write(GPIO_E, 0);
     gpio_write(GPIO_RS, 0);
     gpio_write(GPIO_D7, 0);
@@ -203,7 +206,7 @@ void lcd_init(void)
     gpio_write(GPIO_E, 1);
     udelay(1);
     gpio_write(GPIO_E, 0);
-    udelay(2000);
+    udelay(200);                    // Wait for more than 100 us
     
     lcd_command(0b00110010); 
     lcd_command(LCD_FUNCTIONSET | LCD_FS_4BITMODE | LCD_FS_2LINE | LCD_FS_5x8DOTS); // Function set: 4-bit interface, 2-line display, 5x8 dot character font

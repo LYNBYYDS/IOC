@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+// Define the GPIO pins used to connect to the LCD
 #define RS 7
 #define E  27
 #define D4 22
@@ -72,24 +73,29 @@
 #define MODE_COMMAND    0
 #define MODE_DATA       1
 
-struct gpio_s {
-    uint32_t gpfsel[7];
-    uint32_t gpset[3];
-    uint32_t gpclr[3];
-    uint32_t gplev[3];
-    uint32_t gpeds[3];
-    uint32_t gpren[3];
-    uint32_t gpfen[3];
-    uint32_t gphen[3];
-    uint32_t gplen[3];
-    uint32_t gparen[3];
-    uint32_t gpafen[3];
-    uint32_t gppud[1];
-    uint32_t gppudclk[3];
-    uint32_t test[1];
+// Structure to represent the layout of the memory-mapped I/O for the Raspberry Pi's GPIO
+struct gpio_s
+{
+    uint32_t gpfsel[7];             // Function select registers
+    uint32_t gpset[3];              // Pin output set registers
+    uint32_t gpclr[3];              // Pin output clear registers
+    uint32_t gplev[3];              // Pin level registers
+    uint32_t gpeds[3];              // Pin event detect status registers
+    uint32_t gpren[3];              // Pin rising edge detect enable registers
+    uint32_t gpfen[3];              // Pin falling edge detect enable registers
+    uint32_t gphen[3];              // Pin high detect enable registers
+    uint32_t gplen[3];              // Pin low detect enable registers
+    uint32_t gparen[3];             // Pin async rising edge detect registers
+    uint32_t gpafen[3];             // Pin async falling edge detect registers
+    uint32_t gppud[1];              // Pin pull-up/down enable register
+    uint32_t gppudclk[3];           // Pin pull-up/down clock register
+    uint32_t test[1];               // Test register
 };
+
+// Pointer to the base address of the GPIO I/O
 volatile struct gpio_s *gpio_regs;
 
+// Function to configure the function of a specific GPIO pin
 int gpio_setup(void)
 {
 
@@ -108,7 +114,7 @@ int gpio_setup(void)
     return 0;
 }
 
-// Q3: pourquoi appeler munmap() ?
+
 void gpio_teardown(void)
 {
     munmap((void *) gpio_regs, RPI_BLOCK_SIZE);
@@ -136,7 +142,7 @@ void gpio_write(int gpio, int value)
  * LCD's Operations
  ******************************************************************************/
 
-/* generate E signal */
+// Function is designed to send a "strobe" signal to an LCD module. 
 void lcd_strobe(void)
 {
     gpio_write(E, 1);
@@ -144,11 +150,9 @@ void lcd_strobe(void)
     gpio_write(E, 0);
 }
 
-/* send 4bits to LCD : valable pour les commande et les data */
-
-
+// Write (in four bits mode) a data to an LCD (liquid crystal display) module.
 void lcd_write4bits(unsigned char data, int mode) {
-    // set the RS pin based on the mode (0 = command, 1 = data)
+    // Indicate whether the data to be written is a command or actual data(0 = command, 1 = data)
     gpio_write(RS, mode);
 
     // write the first 4 bits
@@ -157,9 +161,8 @@ void lcd_write4bits(unsigned char data, int mode) {
     gpio_write(D6, (data >> 6) & 0x1);
     gpio_write(D7, (data >> 7) & 0x1);
 
-    // pulse the enable pin to latch the data
-    lcd_strobe();
-    usleep(50);
+    lcd_strobe();       // Pulse the enable pin to auses the LCD to latch the data on its input pins
+    usleep(50);         // Waits for 50 microseconds 
 
     // write the second 4 bits
     gpio_write(D4, (data >> 0) & 0x1);
@@ -167,23 +170,23 @@ void lcd_write4bits(unsigned char data, int mode) {
     gpio_write(D6, (data >> 2) & 0x1);
     gpio_write(D7, (data >> 3) & 0x1);
 
-    // pulse the enable pin to latch the data
-    lcd_strobe();
-    usleep(50);
+    lcd_strobe();       // Pulse the enable pin to auses the LCD to latch the data on its input pins
+    usleep(50);         // Waits for 50 microseconds 
 }
 
 void lcd_command(int cmd)
 {
     gpio_write(RS, 0);
-    lcd_write4bits(cmd, MODE_COMMAND);
-    usleep(2000);
+    lcd_write4bits(cmd, MODE_COMMAND);              // Function writes the 8 bits of the command to the LCD
+    usleep(2000);                                   // Waits for 2000 microseconds
+                                                    // 2000 ms is to ensure that the LCD has enough time to process the command before the next operation
 }
 
 void lcd_data(int character)
 {
     gpio_write(RS, 1);
-    lcd_write4bits(character, MODE_DATA);
-    usleep(1);
+    lcd_write4bits(character, MODE_DATA);            // Function writes the 8 bits of the data to the LCD
+    usleep(1);                                      // Waits for 1 microseconds
 }
 
 /* initialization : pour comprendre la séquence, il faut regarder le cours */
@@ -218,12 +221,60 @@ void lcd_message(const char *txt)
         }
     }
 }
+// This function sets the position of the cursor on an LCD display
+void lcd_set_cursor(const int x, const int y)
+{
+    int x_s, j, i;
+    lcd_command(LCD_RETURNHOME); // Return the cursor to the home position (upper-left corner)
+    
+    // Move the cursor to the desired row (y)
+    if (y == 1){
+        for ( j = 0; j < 40; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }else if (y == 2){
+        for ( j = 0; j < 20; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }else if (y == 3){
+        for ( j = 0; j < 60; ++j) {
+            lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+        }
+    }
+    
+    // Move the cursor to the desired column (x)
+    for (x_s = 0; x_s < x; ++x_s) {
+        lcd_command(LCD_CURSORSHIFT | LCD_CS_CURSORMOVE | LCD_CS_MOVERIGHT);
+    }
+}
+
+// This is an alternative function to set the position of the cursor on an LCD display
+void lcd_set_cursor_V2(const int x, const int y)
+{
+    int a[] = { 0, 0x40, 0x14, 0x54 }; // Array to hold the addresses of the start of each row
+
+    // Move the cursor to the desired row and column using the DDRAM address and the values in the array a[]
+    lcd_command(LCD_SETDDRAMADDR + a[y] + x);
+}
+
+// This function writes a message on the LCD display, split into four rows
+void lcd_message_bis(const char *txt){
+    int len = 20; // Maximum length of each row
+    int i, y;
+    for(y = 0; y < 4; y++){ // Loop through each row
+        lcd_set_cursor_V2(0, y); // Move the cursor to the start of the row
+        for (i = 0; i < strlen(txt) && i < len; i++) {
+            lcd_data(txt[i]); // Write the characters of the message one by one
+        }   
+    }
+}
 
 /*******************************************************************************
  * main : affichage d'un message
  ******************************************************************************/
 int main(int argc, char **argv)
 {
+    int i;
     /* arg */
     if (argc < 2) {
         fprintf(stderr, "ERROR: must take a string as argument\n");
@@ -249,13 +300,25 @@ int main(int argc, char **argv)
     lcd_clear();
 
     /* change the place of the mouse*/
+    lcd_command(LCD_DISPLAYCONTROL | LCD_DC_DISPLAYON | LCD_DC_CURSORON | LCD_DC_BLINKON);
+    lcd_set_cursor(1,3);
+
+    for(i = 0; i < 1000; i++)
+    {
+        usleep(2000); 
+    }
+    lcd_set_cursor_V2(2,3);
 
     /* affichage */
     lcd_message(argv[1]);
+    for(i = 0; i < 1000; i++)
+    {
+        usleep(2000); 
+    }
 
-    lcd_message(argv[1]);
+    lcd_clear();    
+    lcd_message_bis(argv[1]);
 
-    lcd_message(argv[1]);
     /* Release the GPIO memory mapping */
     gpio_teardown();
     

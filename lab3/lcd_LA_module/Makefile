@@ -26,6 +26,19 @@ obj-m           += $(MODULE_LCD).o
 
 all : clean default main.x main_v2.x upload uploadsh
 
+help : 
+	@echo ""
+	@echo "	make [option] :"	
+	@echo ""
+	@echo "		all         clean all, recompile and upload *.ko *.sh"
+	@echo ""
+	@echo "		source      include source"
+	@echo ""
+	@echo "		clean       clean all except sources"
+	@echo ""
+	@echo "		upload      compile programs and copy to card $(CARD_NUMB) in directory /$(LOGIN)/$(LAB)"
+	@echo ""
+
 # Default target to build the modules
 default:;       make -C $(KERNELDIR) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) modules
 
