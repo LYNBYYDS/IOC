@@ -196,16 +196,17 @@ void loop_Lum(struct Lum * lum, mailbox_lum * luminosity, mailbox_led * LedMailb
 
 void displayLuminositytable(int * lumPercent)
 {
-  display.fillRect(0, 19, 128, 34, BLACK);
+  display.fillRect(0, 19, 128, 44, BLACK);
   display.drawLine(0, 57, 128, 57, WHITE);
-  //for(int i = 0; i < LUM_TABLE; i++)
-  //{
-  //  display.drawPixel(i+4, lumPercent[i], WHITE);
-  //}
+  /*for(int i = 0; i < LUM_TABLE; i++)
+  {
+    display.drawPixel(i+4, lumPercent[i], WHITE);
+  }*/
   for(int i = 0; i < LUM_TABLE-1; i++)
   {
     display.drawLine(i+4, lumPercent[i], i+5, lumPercent[i+1], WHITE);
   }
+  
   display.display(); 
 }
 
@@ -231,11 +232,6 @@ void loop_terminal(mailbox_isr * IsrMailbox) {
   stringComplete = false;
 }
 
-/*
-  SerialEvent occurs whenever a new data comes in the hardware serial RX. This
-  routine is run between each time loop() runs, so using delay inside loop can
-  delay response. Multiple bytes of data may be available.
-*/
 void serialEvent() {
   while (Serial.available()) {
     char inChar = (char)Serial.read();
