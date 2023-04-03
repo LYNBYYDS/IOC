@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
         char buffer[256];
         struct sockaddr_in serv_addr, cli_addr;
         int n;
+        int nb_ete = 0;
+        int nb_hiver = 0;
 
         if (argc < 2) {
                 fprintf(stderr, "ERROR, no port provided\n");
@@ -50,7 +52,6 @@ int main(int argc, char *argv[])
             serv_addr.sin_port est initialisé au numéro de port fourni en argument, converti en format de réseau à l'aide de htons() pour s'assurer que l'ordre des octets est correct.
             Enfin, la fonction bind() lie la socket au port et à l'adresse spécifiés dans la structure serv_addr. Si la liaison échoue, la fonction error() est appelée avec un message d'erreur correspondant.
         */
-        
         bzero((char *) &serv_addr, sizeof(serv_addr));
         portno = atoi(argv[1]);
         serv_addr.sin_family = AF_INET;
@@ -62,7 +63,6 @@ int main(int argc, char *argv[])
 
         // On commence à écouter sur la socket. Le 5 est le nombre max
         // de connexions pendantes
-
         /*
             listen(sockfd, 5); permet à la socket sockfd d'écouter les connexions entrantes, avec une file d'attente pouvant contenir jusqu'à 5 connexions en attente
             accept() permet au serveur d'accepter une nouvelle connexion entrante
@@ -71,11 +71,8 @@ int main(int argc, char *argv[])
             le serveur affiche le message reçu avec les informations du client à l'aide de la fonction printf()  
             la connexion est ensuite fermée à l'aide de la fonction close().
         */
-        
-        int nb_ete = 0;
-        int nb_hiver = 0;
-
-        listen(sockfd, 5);      
+        listen(sockfd, 5);
+        // Boucle while pour que le server soit toujour active    
         while (1) {
                 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
                 if (newsockfd < 0)
@@ -95,7 +92,6 @@ int main(int argc, char *argv[])
                 }else if(buffer[0] == '2'){
                         nb_hiver++;
                 }
-
                 printf("\t  --- ---- ---- --- \n");
                 printf("Nombre de vote pour ete est %d\n", nb_ete);
                 printf("Nombre de vote pour hiver est %d\n", nb_hiver);
@@ -107,10 +103,8 @@ int main(int argc, char *argv[])
                         printf("egalite des votes\n");
                 }
                 printf("\t  --- ---- ---- --- \n");
-
                 close(newsockfd);
         }
-
         close(sockfd);
         return 0;
 }

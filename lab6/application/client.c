@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
                 - protocol: ici 0, qui indique que le protocole TCP sera utilisé.
             gethostbyname(argv[1]); est utilisée pour récupérer l'adresse IP du serveur correspondant au nom d'hôte passé en paramètre argv[1]
         */
-
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0)
                 error("ERROR opening socket");
@@ -60,7 +59,6 @@ int main(int argc, char *argv[])
             bcopy copie l'adresse IP de l'hôte server->h_addr vers la structure serv_addr.sin_addr.s_addr, server->h_length est le nombre d'octet qu'on souhaite copier
             serv_addr.sin_port est initialisé avec le numéro de port de l'hôte, converti en ordre d'octets réseau à l'aide de la fonction htons.
         */
-
         bzero((char *) &serv_addr, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
         bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
@@ -82,21 +80,16 @@ int main(int argc, char *argv[])
                 - un pointeur vers le début des données à écrire ici le buffer
                 - le nombre de bytes à écrire
         */
-
         if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
                 error("ERROR connecting");
-
         int vote;
         printf("Fait ton choix mon grand :\n\t - [1] Ete\n\t - [2] hiver ?\n");
         scanf("%d",&vote);
         sprintf(buffer,"%d",vote); // On met le resultat du vote de le buffer
-
         n = write(sockfd,buffer,strlen(buffer));
         if (n != strlen(buffer))
                 error("ERROR message not fully trasmetted");
-
         // On ferme la socket
-
         close(sockfd);
         return 0;
 }
