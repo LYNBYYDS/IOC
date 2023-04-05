@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
         serv_addr.sin_family = AF_INET;
         bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
         serv_addr.sin_port = htons(portno);
+        printf("Creation client connecte au seveur %d:%d\n", *(server->h_addr), ntohs(serv_addr.sin_port));
 
         // On se connecte. L'OS local nous trouve un numéro de port, grâce auquel le serveur
         // peut nous renvoyer des réponses, le \n permet de garantir que le message ne reste
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
         if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
                 error("ERROR connecting");
         int vote;
-        printf("Fait ton choix mon grand :\n\t - [1] Ete\n\t - [2] hiver ?\n");
+        printf("Heure d'ete ou heure d'hiver ? :\n\t - [1] Ete\n\t - [2] hiver\n");
         scanf("%d",&vote);
         sprintf(buffer,"%d",vote); // On met le resultat du vote de le buffer
         n = write(sockfd,buffer,strlen(buffer));

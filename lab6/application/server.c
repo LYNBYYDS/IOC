@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
         serv_addr.sin_port = htons(portno);
         if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
                 error("ERROR on binding");
+        printf("Creation server  %s:%d\n",inet_ntoa(serv_addr.sin_addr), ntohs(serv_addr.sin_port));
 
 
         // On commence à écouter sur la socket. Le 5 est le nombre max
@@ -93,14 +94,14 @@ int main(int argc, char *argv[])
                         nb_hiver++;
                 }
                 printf("\t  --- ---- ---- --- \n");
-                printf("Nombre de vote pour ete est %d\n", nb_ete);
-                printf("Nombre de vote pour hiver est %d\n", nb_hiver);
+                printf("Nombre de vote pour l'heure d'ete : %d\n", nb_ete);
+                printf("Nombre de vote pour l'heure d'hiver : %d\n", nb_hiver);
                 if (nb_ete>nb_hiver){
-                       printf("le gagnant est ete!\n"); 
+                       printf("L'heure d'ete gagne !\n"); 
                 }else if(nb_ete<nb_hiver){
-                        printf("le gagnant est hiver\n");
+                        printf("L'heure d'hiver gagne !\n");
                 }else{
-                        printf("egalite des votes\n");
+                        printf("Egalite des votes\n");
                 }
                 printf("\t  --- ---- ---- --- \n");
                 close(newsockfd);
