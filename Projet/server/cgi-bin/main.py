@@ -8,7 +8,7 @@ import lib_base_de_donnee
 # ------ Parametre ------
 #-------------------------
 
-periode_rafraichissement = 5  # En seconde
+periode_rafraichissement = 6  # En seconde
 
 #------------------------- 
 
@@ -17,8 +17,8 @@ derniere_valeur1 = lib_base_de_donnee.lire_derniere_valeur_capteur(1)
 derniere_valeur2 = lib_base_de_donnee.lire_derniere_valeur_capteur(2)
 
 # Creer des graphiques des derniers valeurs de capteur
-lib_base_de_donnee.creer_graphique_capteur(1)
-lib_base_de_donnee.creer_graphique_capteur(2)
+lib_base_de_donnee.creer_graphique_capteur(1, 50)
+lib_base_de_donnee.creer_graphique_capteur(2, 50)
 
 
 html="""
@@ -32,7 +32,7 @@ html="""
 <img src= "../base_de_donnee/capteur_1.png" style="width: 30%;">
 <img src= "../base_de_donnee/capteur_2.png" style="width: 30%;">
 <br/>
-Dernieres xvaleurs :
+Dernieres valeurs :
 <br/>
 Capteur 1 : {} || Capteur 2 : {}
 <br/><br/>

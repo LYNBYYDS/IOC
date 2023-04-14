@@ -33,9 +33,9 @@ def lire_derniere_valeur_capteur(num_capteur: int) -> float:
     """
     pass
 
-def creer_graphique_capteur(num_capteur: int) -> None:
+def creer_graphique_capteur(num_capteur: int, nb_valeur: int) -> None:
     """
-    Crée un graphique des 20 dernières valeurs du capteur spécifié par son numéro et sauvegarde le graphique
+    Crée un graphique des nb_valeur dernières valeurs du capteur spécifié par son numéro et sauvegarde le graphique
     au format PNG dans le dossier 'img'.
 
     :param num_capteur: Le numéro du capteur.
@@ -118,7 +118,7 @@ def lire_derniere_valeur_capteur(num_capteur):
 
 #--------------------------------------------------
 
-def creer_graphique_capteur(num_capteur):
+def creer_graphique_capteur(num_capteur, nb_valeur):
     # Vérifier si le fichier de base de données existe
     if not os.path.exists(dir_fichier_bd):
         # Créer une nouvelle base de données avec une liste vide de capteurs
@@ -138,19 +138,19 @@ def creer_graphique_capteur(num_capteur):
         with open(dir_fichier_bd, 'r') as f:
             capteurs_valeur = json.load(f)
 
-        # Récupérer les 20 dernières valeurs du capteur dans la base de données
+        # Récupérer les nb_valeur dernières valeurs du capteur dans la base de données
         valeurs_capteur = []
         for valeur in reversed(capteurs_valeur):
             if valeur["capteur"] == num_capteur:
                 valeurs_capteur.append(valeur["valeur"])
-                if len(valeurs_capteur) == 20:
+                if len(valeurs_capteur) == nb_valeur:
                     break
 
         # Créer le graphique
         plt.plot(valeurs_capteur)
-        plt.xlabel("Temps [S]")
-        plt.ylabel("Valeur du capteur")
-        plt.title(f"Graphique des 20 dernières valeurs du capteur {num_capteur}")
+        plt.xlabel("<-- dernieres valeurs | anciennes valeurs --> ")
+        plt.ylabel("Valeur du capteur [%]")
+        plt.title(f"Graphique des {nb_valeur} dernières valeurs du capteur {num_capteur}")
         plt.savefig(dir_graph + f"_{num_capteur}.png")
         plt.close()
 
