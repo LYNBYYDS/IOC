@@ -1,13 +1,14 @@
-
 #include "config.h"
 #include "buzzer.h"
 #include "lum.h"
+#include "PubSubClient.h"
+#include "WiFi.h"
 
 
 struct Lum lum1;
 struct Buzzer buzzer1;
 struct mailbox_lum luminosity = {.state = EMPTY};
-struct mailbox_buzzer buzzer = {.state = EMPTY};
+struct mailbox_buzzer buzzer_mailbox = {.state = EMPTY};
 
 // WiFi
 const char* ssid = "SSID";                
@@ -38,18 +39,21 @@ void setup_MQTT(){
   // Connect to MQTT broker
   client.setServer(mqtt_server, mqtt_port);
   while (!client.connected()) {
-    client.connect(clientID, mqtt_username, mqtt_password);
+    if (client.connect(clientID, mqtt_username, mqtt_password))
+    {
+      client.subscribe("inTopic");
+    }
   }
 }
 
-void callback(const char[] topic, byte* payload, unsigned int length)
+void callback(char* topic, byte* payload, unsigned int length)
 {
   if (strcmp(topic, "music") == 0)
   {
-    if (buzzer->state == EMPTY)           // Check if the buzzer mailbox is empty
+    if (buzzer_mailbox.state == EMPTY)           // Check if the buzzer mailbox is empty
     {
-      buzzer->typemusic = 1;              // Update the type of music asked
-      buzzer->state = FULL;               // Set the buzzer mailbox state to full
+      buzzer_mailbox.typemusic = 1;              // Update the type of music asked
+      buzzer_mailbox.state = FULL;               // Set the buzzer mailbox state to full
     }
   }
 }

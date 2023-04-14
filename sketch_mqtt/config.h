@@ -31,4 +31,15 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 enum {EMPTY, FULL};
 
+// This function waits for a specified period of time
+unsigned int waitFor(int timer, unsigned long period)
+{
+  static unsigned long waitForTimer[MAX_WAIT_FOR_TIMER];    // Timer array
+  unsigned long newTime = micros() / period;                // Calculate current time
+  int delta = newTime - waitForTimer[timer];                // Calculate time since last call
+  if ( delta < 0 ) delta = 1 + newTime;                     // Handle overflow
+  if ( delta ) waitForTimer[timer] = newTime;               // Update timer array
+  return delta;
+}
+
 #endif
