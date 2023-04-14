@@ -3,7 +3,7 @@
 import http.server
 
 port = 8000
-address = ("172.23.153.119", port)
+address = ("", port)
 
 server = http.server.HTTPServer
 

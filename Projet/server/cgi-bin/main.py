@@ -32,20 +32,20 @@ html="""
 <img src= "../base_de_donnee/capteur_1.png" style="width: 30%;">
 <img src= "../base_de_donnee/capteur_2.png" style="width: 30%;">
 <br/>
-Dernieres valeurs :
+Dernieres xvaleurs :
 <br/>
 Capteur 1 : {} || Capteur 2 : {}
 <br/><br/>
 <form method="POST" action="alerte.py">
-  <input name="temps_alerte" cols="20"</input>
+  <label for="temps_alerte">Temps de l'alerte en secondes :</label>
+  <select name="temps_alerte" id="temps_alerte">
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="30">30</option>
+    <option value="60">60</option>
+  </select>
+  <br/>
   <input type="submit" value="Lancer alerte !">
-</form>
-<br/>
-LEDS:<br/>
-<form method="POST" action="led.py">
-  <input name="val1" cols="20"</input>
-  <input name="val2" cols="20"</input>
-  <input type="submit" value="Entrer">
 </form>
 </body>
 """.format(periode_rafraichissement, derniere_valeur1, derniere_valeur2)
