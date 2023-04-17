@@ -8,6 +8,7 @@ html="""
 <head>
   <title>Peri Web Server</title>
   <META HTTP-EQUIV="Refresh" CONTENT="{}; URL=/cgi-bin/main.py">
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
   <script>
     var compteur = {};
     function decrement() {{
@@ -21,7 +22,9 @@ html="""
   </script>
 </head>
 <body>
-<img src= "../img/LTSS_logo_reduit.png" style="width: 30%;">
+<div style="display: flex; justify-content: center; align-items: center; padding: 1em;">
+  <img src="../img/LTSS_logo_reduit.png" style="width: 50%; height: auto; max-width: 400px;">
+</div>
 <br/><br/>
 <body>
   <h1>Alerte lancee ! Fin dans <span id="compteur">{}</span> secondes.</h1>
