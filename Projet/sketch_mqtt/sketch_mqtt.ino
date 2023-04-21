@@ -14,21 +14,21 @@ struct mailbox_lum luminosity = {.state = EMPTY};
 struct mailbox_buzzer buzzer = {.state = EMPTY};
 
 // WiFi
-const char* ssid = "SSID";                
-const char* password = "PASSWORD";
+const char* ssid = "ATH-Telecom";                
+const char* password = "12345678";
 
 // MQTT
-const char* mqtt_server = "127.0.0.1"; 
-const int mqtt_port = 8000;
-const char* mqtt_username = "LA";                           // MQTT username
-const char* mqtt_password = "LAthebest";                    // MQTT password
-const char* clientID = "ESP32LA";                           // MQTT client ID
+const char* mqtt_server = "192.168.153.159"; 
+const int mqtt_port = 1883;
+const char* mqtt_username = "IOC";                           // MQTT username
+const char* mqtt_password = "1234";                    // MQTT password
+const char* clientID = "capteur1";                           // MQTT client ID
 
 // Initialise the WiFi and MQTT Client objects
 WiFiClient espClient;
 
 // 1883 is the listener port for the Broker
-PubSubClient client(mqtt_server, 1883, espClient);
+PubSubClient client(mqtt_server, mqtt_port, espClient);
 
 // Custom function to connect to the MQTT broker via WiFi
 void setup_MQTT(){
