@@ -3,11 +3,11 @@ import sys
 sys.path.append('../librairie')
 import lib_base_de_donnee
 
-MQTT_ADDRESS = ‘192.168.153.159’
+MQTT_ADDRESS = '192.168.153.159'
 MQTT_PORT = 1883
-MQTT_USER = ‘IOC’
-MQTT_PASSWORD = ‘1234’
-MQTT_TOPIC_LUM = ‘luminosity’
+MQTT_USER = 'IOC'
+MQTT_PASSWORD = '1234'
+MQTT_TOPIC_LUM = 'luminosity'
 const char* clientID = "RaspberryPI";     // MQTT client ID
 
 def on_connect(client, userdata, flags, rc):
