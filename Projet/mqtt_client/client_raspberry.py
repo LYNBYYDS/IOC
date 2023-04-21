@@ -7,21 +7,21 @@ MQTT_ADDRESS = '192.168.153.159'
 MQTT_PORT = 1883
 MQTT_USER = 'IOC'
 MQTT_PASSWORD = '1234'
-MQTT_TOPIC_LUM = 'luminosity'
-clientID = 'RaspberryPI'       # MQTT client ID
+MQTT_TOPIC_LUM1 = 'luminosity1'
+MQTT_TOPIC_LUM2 = 'luminosity2'
+MQTT_TOPIC_ALERT = 'alert'
+
 
 def on_connect(client, userdata, flags, rc):
     print("Connected avec code d'erreur :" + str(rc))
-    client.subscribe(MQTT_TOPIC_LUM)
-    #client.subscribe(MQTT_TOPIC_HUMD)
+    client.subscribe(MQTT_TOPIC_LUM1)
+    client.subscribe(MQTT_TOPIC_LUM2)
 
 def on_message(client, userdata, msg):
-    if str(client.client_id) == "capteur1":
-        ecrire_valeur_capteur(1, int(msg.payload))
-        print ('le vapteur' + 1 + 'envoie donne la valeur' + int(msg.payload))  # message de debut
-    elif client.client_id == "capteur2":
-        ecrire_valeur_capteur(2, int(msg.payload))
-        print ('le vapteur' + 2 + 'envoie donne la valeur' + int(msg.payload))  # message de debut
+    if str(msg.topic) == MQTT_TOPIC_LUM1:
+        lib_base_de_donnee.ecrire_valeur_capteur(1, int(msg.payload))
+    elif str(msg.topic) == MQTT_TOPIC_LUM2:
+        lib_base_de_donnee.ecrire_valeur_capteur(2, int(msg.payload))
 
 
 def main():
