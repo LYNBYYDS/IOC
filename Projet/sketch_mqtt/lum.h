@@ -17,17 +17,6 @@ struct Lum
   unsigned long period;                                     // The period for reading the luminosity sensor (in microseconds)
 };
 
-// This function waits for a specified period of time
-unsigned int waitFor(int timer, unsigned long period)
-{
-  static unsigned long waitForTimer[MAX_WAIT_FOR_TIMER];    // Timer array
-  unsigned long newTime = micros() / period;                // Calculate current time
-  int delta = newTime - waitForTimer[timer];                // Calculate time since last call
-  if ( delta < 0 ) delta = 1 + newTime;                     // Handle overflow
-  if ( delta ) waitForTimer[timer] = newTime;               // Update timer array
-  return delta;
-}
-
 // Function to sets up the Lum structure with a specified period
 void setup_Lum(struct Lum * lum, unsigned long period, mailbox_lum * luminosity)
 {

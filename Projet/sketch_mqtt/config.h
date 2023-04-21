@@ -17,7 +17,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define LUM_PIN 36
 
 // Define the period for reading the photo-resistor (0.5 seconds)
-#define LUM_PERIOD 500000
+#define LUM_PERIOD 1000000
 
 // Define the period for capture the button (0.02 seconds)
 #define BUTTON_PERIOD 20000
@@ -30,5 +30,16 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define BUTTON_PIN 23
 
 enum {EMPTY, FULL};
+
+// This function waits for a specified period of time
+unsigned int waitFor(int timer, unsigned long period)
+{
+  static unsigned long waitForTimer[MAX_WAIT_FOR_TIMER];    // Timer array
+  unsigned long newTime = micros() / period;                // Calculate current time
+  int delta = newTime - waitForTimer[timer];                // Calculate time since last call
+  if ( delta < 0 ) delta = 1 + newTime;                     // Handle overflow
+  if ( delta ) waitForTimer[timer] = newTime;               // Update timer array
+  return delta;
+}
 
 #endif

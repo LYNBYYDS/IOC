@@ -1,17 +1,16 @@
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
+#include "PubSubClient.h"
+#include "WiFi.h"
 #include "config.h"
 #include "buzzer.h"
 #include "lum.h"
 
+#define captor_id 1
 
 struct Lum lum1;
 struct Buzzer buzzer1;
 struct mailbox_lum luminosity = {.state = EMPTY};
-struct mailbox_buzzer buzzer = {.state = EMPTY};
+struct mailbox_buzzer buzzer_mailbox = {.state = EMPTY};
 
 // WiFi
 const char* ssid = "ATH-Telecom";                
@@ -21,8 +20,10 @@ const char* password = "12345678";
 const char* mqtt_server = "192.168.153.159"; 
 const int mqtt_port = 1883;
 const char* mqtt_username = "IOC";                           // MQTT username
-const char* mqtt_password = "1234";                    // MQTT password
-const char* clientID = "capteur1";                           // MQTT client ID
+const char* mqtt_password = "1234";                           // MQTT password
+const char* clientID = "esp32";                           // MQTT client ID
+const char* topic_lum1 = "luminosity1";
+const char* topic_lum2 = "luminosity2";
 
 // Initialise the WiFi and MQTT Client objects
 WiFiClient espClient;
@@ -46,14 +47,15 @@ void setup_MQTT(){
   }
 }
 
-void callback(const char[] topic, byte* payload, unsigned int length)
+void callback(char* topic, byte* payload, unsigned int length)
 {
-  if (strcmp(topic, "music") == 0)
+  if (strcmp(topic, "alert") == 0)
   {
-    if (buzzer->state == EMPTY)           // Check if the buzzer mailbox is empty
+    if (buzzer_mailbox.state == EMPTY)           // Check if the buzzer mailbox is empty
     {
-      buzzer->typemusic = 1;              // Update the type of music asked
-      buzzer->state = FULL;               // Set the buzzer mailbox state to full
+      buzzer_mailbox.second = int(payload);              // Update the type of music asked
+      Serial.print(buzzer_mailbox.second);
+      buzzer_mailbox.state = FULL;               // Set the buzzer mailbox state to full
     }
   }
 }
@@ -65,7 +67,11 @@ void loop_MQTT(mailbox_lum * luminosity)
     // There is a new value in the mailbox
     // Publish the value to MQTT
     String lum = String(luminosity->lumPercent);
-    client.publish("luminosity", lum.c_str());
+    if (captor_id == 1){
+      client.publish(topic_lum1, lum.c_str());}
+    else if (captor_id == 2){
+      client.publish(topic_lum2, lum.c_str());}
+    luminosity->state = EMPTY;
   }
 }
 
@@ -73,10 +79,11 @@ void setup() {
   Serial.begin(9600);
   setup_MQTT();
   setup_Lum(&lum1, LUM_PERIOD, &luminosity);
+  client.setCallback(callback);
 }
 
 void loop() {
   Serial.setTimeout(2000);
   loop_Lum(&lum1, &luminosity);
-   loop_MQTT(&luminosity);
+  loop_MQTT(&luminosity);
 }
