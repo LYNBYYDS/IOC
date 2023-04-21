@@ -22,12 +22,12 @@ html="""
   </script>
 </head>
 <body>
-<div style="display: flex; justify-content: center; align-items: center; padding: 1em;">
-  <img src="../img/LTSS_logo_reduit.png" style="width: 50%; height: auto; max-width: 400px;">
-</div>
-<br/><br/>
-<body>
-  <h1>Alerte lancee ! Fin dans <span id="compteur">{}</span> secondes.</h1>
+  <div style="display: flex; justify-content: center; align-items: center; padding: 1em;">
+    <img src="../img/LTSS_logo_reduit.png" style="width: 50%; height: auto; max-width: 400px;">
+  </div>
+  <br/><br/>
+  <body>
+    <h1>Alerte lancee ! Fin dans <span id="compteur">{}</span> secondes.</h1>
 </body>
 </body>
 
