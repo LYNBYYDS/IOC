@@ -3,10 +3,17 @@ import sys
 sys.path.append('../librairie')
 import lib_base_de_donnee
 
-MQTT_ADDRESS = '192.168.153.159'
-MQTT_PORT = 1883
-MQTT_USER = 'IOC'
-MQTT_PASSWORD = '1234'
+#-------------------------------------
+# ------ Parametre ------
+#-------------------------------------
+
+MQTT_ADDRESS = '192.168.153.159'  # Adresse IP du raspberry (A modifier si changement de router wifi)
+MQTT_PORT = 1883                  # Port du broker MQTT (ne devrait pas changer)
+MQTT_USER = 'IOC'                 # Nom du user MQTT (ne devrait pas changer)
+MQTT_PASSWORD = '1234'            # Mdp du user MQTT (ne devrait pas changer)
+
+#-------------------------------------
+
 MQTT_TOPIC_LUM1 = 'luminosity1'
 MQTT_TOPIC_LUM2 = 'luminosity2'
 MQTT_TOPIC_ALERT = 'alert'

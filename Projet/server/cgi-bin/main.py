@@ -8,7 +8,7 @@ import lib_base_de_donnee
 # ------ Parametre ------
 #-------------------------
 
-periode_rafraichissement = 10  # En seconde
+periode_rafraichissement = 100  # En seconde
 
 #------------------------- 
 

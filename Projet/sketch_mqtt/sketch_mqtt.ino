@@ -5,19 +5,28 @@
 #include "buzzer.h"
 #include "lum.h"
 
+//-------------------------
+// ------ Parametre ------
+//-------------------------
+
 #define captor_id 1
+
+// WiFi
+const char* ssid = "Freebox-367764";             // Nom du wifi 
+const char* password = "hzb2xqvx24q6w23dqv342t";            // Mdp wifi
+
+// MQTT
+const char* mqtt_server = "192.168.1.29";  // Adresse IP du Raspberry
+
+//------------------------- 
+
 
 struct Lum lum1;
 struct Buzzer buzzer1;
 struct mailbox_lum luminosity = {.state = EMPTY};
 struct mailbox_buzzer buzzer_mailbox = {.state = EMPTY};
 
-// WiFi
-const char* ssid = "ATH-Telecom";                
-const char* password = "12345678";
-
 // MQTT
-const char* mqtt_server = "192.168.153.159"; 
 const int mqtt_port = 1883;
 const char* mqtt_username = "IOC";                           // MQTT username
 const char* mqtt_password = "1234";                           // MQTT password

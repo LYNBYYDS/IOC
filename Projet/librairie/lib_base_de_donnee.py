@@ -8,9 +8,9 @@ import time
 #--------------------------------------------------
 
 # Fichier base de donnee avec les valeurs de capteur
-dir_fichier_bd = "base_de_donnee/capteurs_valeur.json"
-dir_graph = "base_de_donnee/capteur"
-dir_ecriture_fichier_bd = "../server/base_de_donnee/capteurs_valeur.json"
+dir_fichier_bd = "base_de_donnee/capteurs_valeur.json"                      # direction depuis le server web
+dir_graph = "base_de_donnee/capteur"                                        # direction depuis le server web
+dir_ecriture_fichier_bd = "../server/base_de_donnee/capteurs_valeur.json"   # direction depuis le client MQTT
 
 #--------------------------------------------------
 # ------ Signature des fonctions ------
