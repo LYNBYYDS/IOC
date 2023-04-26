@@ -1,0 +1,46 @@
+body {
+  background-color: #2c3e50; /* Définit la couleur de fond de la page */
+  color: #ecf0f1; /* Définit la couleur du texte de la page */
+  font-weight: bold; /* Définit le type de police pour tous les éléments de texte */
+  text-align: center; /* Centre le texte horizontalement */
+}
+
+form {
+  display: flex; /* Utilise Flexbox pour les éléments du formulaire */
+  flex-direction: column; /* Empile les éléments dans une colonne */
+  align-items: center; /* Centre les éléments verticalement */
+}
+
+input, select, button { /* Applique les styles suivants à tous les champs de texte, menus déroulants et boutons */
+  font-size: 16px; /* Définit la taille de la police */
+  padding: 8px 12px; /* Ajoute de l'espace à l'intérieur du champ */
+  margin: 4px 0; /* Ajoute de l'espace autour du champ */
+  border: 2px solid #3498db; /* Ajoute une bordure de 2px solide avec une couleur spécifiée */
+  border-radius: 4px; /* Ajoute un rayon de bordure pour les coins arrondis */
+  background-color: #34495e; /* Définit la couleur de fond */
+  color: #ecf0f1; /* Définit la couleur du texte */
+  font-weight: bold; /* Définit la graisse de la police */
+}
+
+input[type="submit"], button { /* Applique les styles suivants aux boutons d'envoi et aux boutons normaux */
+  background-color: #3498db; /* Définit la couleur de fond */
+  color: #fff; /* Définit la couleur du texte */
+  border: 2px solid #3498db; /* Définit la bordure */
+  cursor: pointer; /* Change le curseur de la souris lorsqu'elle passe sur le bouton */
+  transition: all 0.3s; /* Ajoute une transition de 0,3 seconde pour tous les styles qui changent lorsqu'un bouton est survolé */
+}
+
+input[type="submit"]:hover, button:hover { /* Applique les styles suivants lorsqu'un bouton est survolé */
+  background-color: #2980b9; /* Change la couleur de fond */
+  border-color: #2980b9; /* Change la couleur de bordure */
+}
+
+input[type="submit"]:active, button:active { /* Applique les styles suivants lorsqu'un bouton est cliqué */
+  background-color: #1a5276; /* Change la couleur de fond */
+  border-color: #1a5276; /* Change la couleur de bordure */
+}
+
+.centered-form {
+  width: 80%; /* Définit la largeur du formulaire à 80% */
+  margin: auto; /* Centre le formulaire horizontalement en utilisant la valeur "auto" pour la marge */
+}
