@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# attendre que le programme soit démarré
+while ! pgrep -f "mon_programme" > /dev/null; do
+  sleep 1
+done
+
+# attendre que la chaîne de caractères soit affichée sur le terminal
+while ! grep -q "ma_chaine" <(tail -f /dev/stdin < <(pgrep -f "mon_programme" | xargs -I{} readlink -f /proc/{}/fd/1)); do
+  sleep 1
+done
+
 echo "Démarrage du projet..."
 
 # change permission of python files in cgi-bin folder
