@@ -10,6 +10,12 @@ chmod u+x ./server/cgi-bin/*.py
 echo "Démarrage du broker MQTT..."
 sudo systemctl start mosquitto
 
+# attendre que le broker MQTT soit lancé
+echo "Attente de démarrage du broker MQTT..."
+while ! nc -z localhost 1883; do
+  sleep 1
+done
+
 # start MQTT client
 echo "Démarrage du client MQTT..."
 cd ./mqtt_client
