@@ -7,7 +7,7 @@ import lib_base_de_donnee
 # ------ Parametre ------
 #-------------------------------------
 
-MQTT_ADDRESS = '192.168.153.159'  # Adresse IP du raspberry (A modifier si changement de router wifi)
+MQTT_ADDRESS = '192.168.1.29'       # Adresse IP du raspberry (A modifier si changement de router wifi)
 MQTT_PORT = 1883                  # Port du broker MQTT (ne devrait pas changer)
 MQTT_USER = 'IOC'                 # Nom du user MQTT (ne devrait pas changer)
 MQTT_PASSWORD = '1234'            # Mdp du user MQTT (ne devrait pas changer)
