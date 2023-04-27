@@ -16,11 +16,23 @@ cd ./mqtt_client
 python client_raspberry.py &
 cd ..
 
+# attendre que le client MQTT soit lancé
+echo "Attente de démarrage du client MQTT..."
+while ! pgrep -f client_raspberry.py > /dev/null; do
+  sleep 1
+done
+
 # start server
 echo "Démarrage du serveur..."
 cd ./server
 python server.py &
 cd ..
+
+# attendre que le serveur Web soit lancé
+echo "Attente de démarrage du serveur Web..."
+while ! nc -z localhost 8000; do
+  sleep 1
+done
 
 # demande à l'utilisateur s'il veut lancer la page Web des données
 read -p "Voulez-vous ouvrir la page Web des données ? (y/n)" choice
