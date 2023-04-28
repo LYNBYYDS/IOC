@@ -4,6 +4,12 @@ import cgi, os, time, sys
 form = cgi.FieldStorage()
 temps_alerte = form.getvalue('temps_alerte')
 
+# Ouverture de la fifo Web_to_MQTT.fifo en écriture
+fifo_mqtt_to_web = open("Web_to_MQTT.fifo", "w")
+
+# Envoi de la valeur temps_alerte au client MQTT via la fifo
+fifo_mqtt_to_web.write(temps_alerte)
+
 html="""
 <head>
   <title>Peri Web Server</title>
@@ -32,6 +38,8 @@ html="""
 </body>
 
 """.format(temps_alerte, temps_alerte, temps_alerte)
+
+# Fermeture de la fifo Web_to_MQTT.fifo
+fifo_mqtt_to_web.close()
+
 print(html)
-
-

@@ -1,5 +1,7 @@
 import paho.mqtt.client as mqtt
 import sys
+import os
+
 sys.path.append('../librairie')
 import lib_base_de_donnee
 
@@ -30,7 +32,6 @@ def on_message(client, userdata, msg):
     elif str(msg.topic) == MQTT_TOPIC_LUM2:
         lib_base_de_donnee.ecrire_valeur_capteur(2, int(msg.payload))
 
-
 def main():
     mqtt_client = mqtt.Client()
     mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
@@ -38,9 +39,26 @@ def main():
     mqtt_client.on_message = on_message
 
     mqtt_client.connect(MQTT_ADDRESS, MQTT_PORT)
-    mqtt_client.loop_forever()
+    mqtt_client.loop_start()
 
- 
+    # Ouverture de la FIFO
+    try:
+        os.mkfifo('Web_to_MQTT.fifo')
+    except FileExistsError:
+        pass
+
+    with open('Web_to_MQTT.fifo', 'r') as fifo:
+        while True:
+            # Lecture non-bloquante de la FIFO
+            message = fifo.readline().strip()
+            if message:
+                # Publication du message en MQTT sur le topic 'alert'
+                mqtt_client.publish(MQTT_TOPIC_ALERT, int(message))
+
+    mqtt_client.loop_stop()
+    mqtt_client.disconnect()
+
+
 if __name__ == '__main__':
     print('Debut main')
     main()
