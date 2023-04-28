@@ -16,7 +16,7 @@ const char* ssid = "Freebox-367764";             // Nom du wifi
 const char* password = "hzb2xqvx24q6w23dqv342t";            // Mdp wifi
 
 // MQTT
-const char* mqtt_server = "192.168.1.29";  // Adresse IP du Raspberry
+const char* mqtt_server = "192.168.1.29";  // Adresse IP Raspberry
 
 //------------------------- 
 

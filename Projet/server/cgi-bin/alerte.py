@@ -5,7 +5,8 @@ form = cgi.FieldStorage()
 temps_alerte = form.getvalue('temps_alerte')
 
 # Ouverture de la fifo Web_to_MQTT.fifo en écriture
-fifo_mqtt_to_web = open("Web_to_MQTT.fifo", "w")
+Web_to_MQTT = '/tmp/Web_to_MQTT.fifo'
+fifo_mqtt_to_web = open(Web_to_MQTT, "w")
 
 # Envoi de la valeur temps_alerte au client MQTT via la fifo
 fifo_mqtt_to_web.write(temps_alerte)
