@@ -73,8 +73,8 @@ def ecrire_valeur_capteur(num_capteur, valeur):
         capteurs_valeur.append({"capteur": num_capteur, "valeur": valeur})
 
         # Limiter le nombre de valeurs de capteurs à 1000 valeurs
-        if len(capteurs_valeur) > 1000:
-            capteurs_valeur = capteurs_valeur[-1000:]
+        if len(capteurs_valeur) > 2000:
+            capteurs_valeur = capteurs_valeur[-2000:]
 
         # Enregistrer les modifications dans la base de données JSON
         with open(dir_ecriture_fichier_bd, 'w') as f:
