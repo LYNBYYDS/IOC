@@ -27,12 +27,13 @@ MQTT_TOPIC_ALERT = 'alert'
 # Constante pour fifo
 Web_to_MQTT = '/tmp/Web_to_MQTT.fifo'
 
+# Fonction pour se connecter au broker et souscrir aux topics
 def on_connect(client, userdata, flags, rc):
     print("Connected avec code d'erreur :" + str(rc))
     client.subscribe(MQTT_TOPIC_LUM1)
     client.subscribe(MQTT_TOPIC_LUM2)
 
-
+# Fonction pour lire et traiter les messages
 def on_message(client, userdata, msg):
     if str(msg.topic) == MQTT_TOPIC_LUM1:
         lib_base_de_donnee.ecrire_valeur_capteur(1, int(msg.payload))
