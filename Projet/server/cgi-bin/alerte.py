@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import cgi, os, time, sys
 
+# Recuperation de la valeur choisi via le formulaire dans main.py
 form = cgi.FieldStorage()
 temps_alerte = form.getvalue('temps_alerte')
 
