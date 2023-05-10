@@ -12,8 +12,8 @@
 #define captor_id 1
 
 // WiFi
-const char* ssid = "Freebox-367764";             // Nom du wifi 
-const char* password = "hzb2xqvx24q6w23dqv342t";            // Mdp wifi
+const char* ssid = "li";             // Nom du wifi 
+const char* password = "woshinibaba";            // Mdp wifi
 
 // MQTT
 const char* mqtt_server = "192.168.1.29";  // Adresse IP Raspberry
@@ -88,6 +88,7 @@ void setup() {
   Serial.begin(9600);
   setup_MQTT();
   setup_Lum(&lum1, LUM_PERIOD, &luminosity);
+  setup_Buzzer(&buzzer1, 1000000);              // 0.5s
   client.setCallback(callback);
 }
 
@@ -95,4 +96,5 @@ void loop() {
   Serial.setTimeout(2000);
   loop_Lum(&lum1, &luminosity);
   loop_MQTT(&luminosity);
+  loop_Buzzer(&buzzer1, &buzzer_mailbox);
 }

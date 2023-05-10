@@ -8,8 +8,8 @@
 struct mailbox_buzzer
 {
   int state;                                // Whether the mailbox is empty or full
-  int typemusic;                            // How long the buzzer buzzes
-  int second;
+  int typemusic;                            
+  int second;                               // How long the buzzer buzzes
 };
 
 // Define a structure to hold the data for the buzzer
@@ -34,11 +34,9 @@ void loop_Buzzer(struct Buzzer *bz, mailbox_buzzer *BuzzerMailbox)
 {
   if (!(waitFor(bz->timer,bz->period))) return;     // Wait for the appropriate amount of time before executing the loop
   if (BuzzerMailbox->state = FULL)                                  // Check if the mailbox containing button state information is full
-  {
-    if (bz->etat == 0)
     {
       beep(NOTE_A4, (BuzzerMailbox->second)*1000);
       BuzzerMailbox->state = EMPTY;
     }
-  }}
+  }
 #endif
