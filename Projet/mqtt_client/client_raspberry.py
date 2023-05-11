@@ -4,12 +4,13 @@ import os
 
 sys.path.append('../librairie')
 import lib_base_de_donnee
+import struct
 
 #-------------------------------------
 # ------ Parametre ------
 #-------------------------------------
 #
-MQTT_ADDRESS = '192.168.1.29'       # Adresse IP raspberry (A modifier si changement de router wifi)
+MQTT_ADDRESS = '192.168.170.159'       # Adresse IP raspberry (A modifier si changement de router wifi)
 #
 #---------------------------
 #
@@ -27,13 +28,12 @@ MQTT_TOPIC_ALERT = 'alert'
 # Constante pour fifo
 Web_to_MQTT = '/tmp/Web_to_MQTT.fifo'
 
-# Fonction pour se connecter au broker et souscrir aux topics
 def on_connect(client, userdata, flags, rc):
     print("Connected avec code d'erreur :" + str(rc))
     client.subscribe(MQTT_TOPIC_LUM1)
     client.subscribe(MQTT_TOPIC_LUM2)
 
-# Fonction pour lire et traiter les messages
+
 def on_message(client, userdata, msg):
     if str(msg.topic) == MQTT_TOPIC_LUM1:
         lib_base_de_donnee.ecrire_valeur_capteur(1, int(msg.payload))
@@ -62,7 +62,8 @@ def main():
         message = fifo_mqtt_to_web.readline().strip()
         if message:
             # Publication du message en MQTT sur le topic 'alert'
-            mqtt_client.publish(MQTT_TOPIC_ALERT, int(message))
+            payload = struct.pack('i',int(message)) # On converti l'entier en octet pour l'envoie MQTT
+            mqtt_client.publish(MQTT_TOPIC_ALERT, payload)
 
     mqtt_client.loop_stop()
     mqtt_client.disconnect()
