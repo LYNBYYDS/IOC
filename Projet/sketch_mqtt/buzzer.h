@@ -33,7 +33,7 @@ void setup_Buzzer(struct Buzzer * bz, unsigned long period)
 void loop_Buzzer(struct Buzzer *bz, mailbox_buzzer *BuzzerMailbox) 
 {
   if (!(waitFor(bz->timer,bz->period))) return;     // Wait for the appropriate amount of time before executing the loop
-  if (BuzzerMailbox->state = FULL)                                  // Check if the mailbox containing button state information is full
+  if (BuzzerMailbox->state == FULL)                                  // Check if the mailbox containing button state information is full
     {
       beep(NOTE_A4, (BuzzerMailbox->second)*1000);
       BuzzerMailbox->state = EMPTY;
