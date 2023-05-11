@@ -70,11 +70,13 @@ void callback(char* topic, byte* payload, unsigned int length)
     for (int i = 0; i < length; i++) {
       temps_alert |= (payload[i] << (8 * i));
     }
-    if (buzzer_mailbox.state == EMPTY)           // Check if the buzzer mailbox is empty
+    Serial.print("recieved value:");
+    if (buzzer_mailbox.state == EMPTY)            // Check if the buzzer mailbox is empty
     {
-      buzzer_mailbox.second = int(temps_alert);   // Update the type of music asked
-      Serial.print(buzzer_mailbox.second);
-      buzzer_mailbox.state = FULL;               // Set the buzzer mailbox state to full
+      buzzer_mailbox.second = temps_alert;        // Update the secound of beep 
+      Serial.println(buzzer_mailbox.second);
+      buzzer_mailbox.state = FULL;                // Set the buzzer mailbox state to full
+      Serial.println("BuzzerMailbox full now");
     }
   }
 }
