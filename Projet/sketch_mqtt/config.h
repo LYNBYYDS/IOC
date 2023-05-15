@@ -16,10 +16,10 @@
 #define OLED_RESET    16                                    // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// Define the period for reading the photo-resistor (1 seconds)
+// Define the period for reading the photo-resistor (1 second)
 #define LUM_PERIOD 1000000
 
-// Define the period for counter (0.1 seconds)
+// Define the period for the counter (0.1 second)
 #define COUNTER_PERIOD 1000000
 
 // Max timer numbers
@@ -40,8 +40,8 @@ unsigned int waitFor(int timer, unsigned long period)
   static unsigned long waitForTimer[MAX_WAIT_FOR_TIMER];    // Timer array
   unsigned long newTime = micros() / period;                // Calculate current time
   int delta = newTime - waitForTimer[timer];                // Calculate time since last call
-  if ( delta < 0 ) delta = 1 + newTime;                     // Handle overflow
-  if ( delta ) waitForTimer[timer] = newTime;               // Update timer array
+  if (delta < 0) delta = 1 + newTime;                        // Handle overflow
+  if (delta) waitForTimer[timer] = newTime;                 // Update timer array
   return delta;
 }
 
