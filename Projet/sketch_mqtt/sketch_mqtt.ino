@@ -4,6 +4,7 @@
 #include "config.h"
 #include "buzzer.h"
 #include "lum.h"
+#include "oled.h"
 
 
 //-------------------------
@@ -13,16 +14,16 @@
 #define captor_id 1
 
 // WiFi
-const char* ssid = "ATH-Telecom";             // Nom du wifi 
-const char* password = "12345678";            // Mdp wifi
+const char* ssid = "li";                         // Nom du wifi 
+const char* password = "woshinibaba";            // Mdp wifi
 
 // MQTT
-const char* mqtt_server = "192.168.170.159";  // Adresse IP Raspberry
+const char* mqtt_server = "172.20.10.4";  // Adresse IP Raspberry
 
 //------------------------- 
 
-
 struct Lum lum1;
+struct Oled oled1;
 struct Buzzer buzzer1;
 struct mailbox_lum luminosity = {.state = EMPTY};
 struct mailbox_buzzer buzzer_mailbox = {.state = EMPTY};
@@ -59,6 +60,7 @@ void setup_MQTT(){
   }
   // On subscribe le topic pour recevoir les alerts
   client.subscribe(topic_alert);
+  Serial.println("Alert topic subscribed");
 }
 
 void callback(char* topic, byte* payload, unsigned int length)
@@ -71,12 +73,12 @@ void callback(char* topic, byte* payload, unsigned int length)
       temps_alert |= (payload[i] << (8 * i));
     }
     Serial.print("recieved value:");
-    if (buzzer_mailbox.state == EMPTY)            // Check if the buzzer mailbox is empty
+    if (buzzer_mailbox.state == EMPTY)           // Check if the buzzer mailbox is empty
     {
-      buzzer_mailbox.second = temps_alert;        // Update the secound of beep 
+      buzzer_mailbox.second = temps_alert;   // Update the type of music asked
       Serial.println(buzzer_mailbox.second);
-      buzzer_mailbox.state = FULL;                // Set the buzzer mailbox state to full
-      Serial.println("BuzzerMailbox full now");
+      buzzer_mailbox.state = FULL;               // Set the buzzer mailbox state to full
+      displayAlert(temps_alert);
     }
   }
 }
@@ -97,10 +99,20 @@ void loop_MQTT(mailbox_lum * luminosity)
 }
 
 void setup() {
+  // Set up I2C communication on pins 4 and 15
+  Wire.begin(4, 15);
   Serial.begin(9600);
+
+  // Initialize the OLED display
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+  display.clearDisplay();   // Clear the display buffer
   setup_MQTT();
+  setup_Oled(&oled1, LUM_PERIOD/2);
   setup_Lum(&lum1, LUM_PERIOD, &luminosity);
-  setup_Buzzer(&buzzer1, 1000000);              // 0.5s
+  setup_Buzzer(&buzzer1, 200000);              // 0.2s
   client.setCallback(callback);
 }
 

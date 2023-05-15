@@ -2,13 +2,13 @@
 #define BUZZER_H
 
 #include "config.h"
-#include "music.h"
+
+ToneESP32 buzzer_Tone(BUZZER_PIN, BUZZER_CHANNEL);
 
 // Define a structure to hold the data for the buzzer mailbox
 struct mailbox_buzzer
 {
   int state;                                // Whether the mailbox is empty or full
-  int typemusic;                            
   int second;                               // How long the buzzer buzzes
 };
 
@@ -35,7 +35,8 @@ void loop_Buzzer(struct Buzzer *bz, mailbox_buzzer *BuzzerMailbox)
   if (!(waitFor(bz->timer,bz->period))) return;     // Wait for the appropriate amount of time before executing the loop
   if (BuzzerMailbox->state == FULL)                                  // Check if the mailbox containing button state information is full
     {
-      beep(NOTE_A4, (BuzzerMailbox->second)*1000);
+      Serial.println("Start beeping");
+      buzzer_Tone.tone(NOTE_A4, (BuzzerMailbox->second)*1000);
       BuzzerMailbox->state = EMPTY;
     }
   }
