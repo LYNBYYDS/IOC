@@ -13,7 +13,7 @@ const char* password = "woshinibaba";            // Mdp wifi
 
 // MQTT
 const char* mqtt_server = "172.20.10.4";  // Adresse IP Raspberry
-
+int recieveMSG = 0;
 struct Lum lum1;
 struct Oled oled1;
 struct Buzzer buzzer1;
@@ -63,17 +63,17 @@ void callback(char* topic, byte* payload, unsigned int length)
   {
     int temps_alert = 0;
     // Convert the received payload from MQTT to an integer value (temps_alert)
+    recieveMSG = 1;
     for (int i = 0; i < length; i++)
     {
       temps_alert |= (payload[i] << (8 * i));
     }
     Serial.print("Received value:");
-    if (buzzer_mailbox.state == EMPTY)  // Check if the buzzer mailbox is empty
+    if (buzzer_mailbox.state == EMPTY)                      // Check if the buzzer mailbox is empty
     {
-      buzzer_mailbox.second = temps_alert;  // Update the duration of the buzzer sound
+      buzzer_mailbox.second = temps_alert;                  // Update the duration of the buzzer sound
       Serial.println(buzzer_mailbox.second);
-      buzzer_mailbox.state = FULL;  // Set the buzzer mailbox state to full
-      displayAlert(temps_alert);    // Display the alert on the OLED display
+      buzzer_mailbox.state = FULL;                          // Set the buzzer mailbox state to full
     }
   }
 }
@@ -105,22 +105,23 @@ void setup() {
   Serial.begin(9600);
 
   // Initialize the OLED display
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {       // Address 0x3C for 128x32
     Serial.println(F("SSD1306 allocation failed"));
-    for (;;) ; // Don't proceed, loop forever
+    for (;;) ;                                            // Don't proceed, loop forever
   }
-  display.clearDisplay();   // Clear the display buffer
-  setup_MQTT();             // Set up MQTT connection
-  setup_Oled(&oled1, LUM_PERIOD / 2);  // Set up the OLED display with a refresh period
-  setup_Lum(&lum1, LUM_PERIOD, &luminosity);  // Set up the luminosity sensor with a sampling period and mailbox reference
-  setup_Buzzer(&buzzer1, 200000);  // Set up the buzzer with a duration of 0.2 seconds
-  client.setCallback(callback);   // Set the MQTT callback function
+  displayLogo();
+  setup_MQTT();                                           // Set up MQTT connection
+  setup_Oled(&oled1,200000);                              // Set up the OLED display with a refresh period
+  setup_Lum(&lum1, LUM_PERIOD, &luminosity);              // Set up the luminosity sensor with a sampling period and mailbox reference
+  setup_Buzzer(&buzzer1, BUZZER_PERIOD);                  // Set up the buzzer with a duration of 1 seconds
+  client.setCallback(callback);                           // Set the MQTT callback function
 }
 
 void loop() {
   Serial.setTimeout(2000);
-  loop_Lum(&lum1, &luminosity);       // Check and update the luminosity value
-  loop_MQTT(&luminosity);             // Publish the luminosity value to MQTT if there is a new value
-  loop_Buzzer(&buzzer1, &buzzer_mailbox);  // Control the buzzer based on the received commands
-  client.loop();                     // Maintain the MQTT connection and handle incoming messages
+  loop_Lum(&lum1, &luminosity);                           // Check and update the luminosity value
+  loop_MQTT(&luminosity);                                 // Publish the luminosity value to MQTT if there is a new value
+  loop_Buzzer(&buzzer1, &buzzer_mailbox, &recieveMSG);                 // Control the buzzer based on the received commands
+  loop_Oled(&oled1, &buzzer_mailbox, &recieveMSG);         // Show the information about the buzzer
+  client.loop();                                          // Maintain the MQTT connection and handle incoming messages
 }

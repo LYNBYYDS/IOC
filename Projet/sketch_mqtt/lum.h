@@ -6,22 +6,22 @@
 // Define a structure to hold the data for the luminosity mailbox
 struct mailbox_lum 
 {
-  int state;                  // Whether the mailbox is empty or full
-  int lumPercent;             // The percentage of luminosity (0-100)
+  int state;                                                  // Whether the mailbox is empty or full
+  int lumPercent;                                             // The percentage of luminosity (0-100)
 };
 
 // Define a structure to hold the data for the luminosity sensor
 struct Lum 
 {
-  int timer;                  // The timer index for the luminosity sensor
-  unsigned long period;       // The period for reading the luminosity sensor (in microseconds)
+  int timer;                                                  // The timer index for the luminosity sensor
+  unsigned long period;                                       // The period for reading the luminosity sensor (in microseconds)
 };
 
 // Function to set up the Lum structure with a specified period
 void setup_Lum(struct Lum *lum, unsigned long period, mailbox_lum *luminosity)
 {
-  lum->timer = 0;             // Set the timer number to 0
-  lum->period = period;       // Set the period of the lum sensor
+  lum->timer = 0;                                             // Set the timer number to 0
+  lum->period = period;                                       // Set the period of the lum sensor
 }
 
 // Function to read the value of the photoresistor and convert it to a percentage

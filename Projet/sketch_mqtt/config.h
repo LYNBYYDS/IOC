@@ -28,8 +28,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // Pin number of the peripheral
 #define BUZZER_PIN 17
 #define BUZZER_CHANNEL 0
+#define BUZZER_PERIOD 1000000
 
-#define LUM_PIN 36      // Define the analog input pin for the photo-resistor
+#define LUM_PIN 36                                          // Define the analog input pin for the photo-resistor
 
 
 enum {EMPTY, FULL};
@@ -40,7 +41,7 @@ unsigned int waitFor(int timer, unsigned long period)
   static unsigned long waitForTimer[MAX_WAIT_FOR_TIMER];    // Timer array
   unsigned long newTime = micros() / period;                // Calculate current time
   int delta = newTime - waitForTimer[timer];                // Calculate time since last call
-  if (delta < 0) delta = 1 + newTime;                        // Handle overflow
+  if (delta < 0) delta = 1 + newTime;                       // Handle overflow
   if (delta) waitForTimer[timer] = newTime;                 // Update timer array
   return delta;
 }
